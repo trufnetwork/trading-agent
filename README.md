@@ -114,38 +114,37 @@ can follow this.
 **Verified:** [Claude Code](https://claude.com/claude-code). Every step in this
 repository was run by it, on a real machine, with real money.
 
-**Should work, not yet tested.** These are the popular coding agents that run
-commands in a terminal the way Claude Code does. Several of them also read
+**Should work, not yet tested.** These are the popular tools with those three
+abilities, or that put an open model behind one that does. Several also read
 `AGENTS.md`, which is the file this repository uses to orient an agent.
 
-| Maker | Agent |
-|-------|-------|
-| **OpenAI** | [Codex CLI](https://github.com/openai/codex) |
-| **Google** | [Gemini CLI](https://github.com/google-gemini/gemini-cli) |
-| **GitHub** | [Copilot](https://github.com/features/copilot), agent mode |
-| **Cursor** | [Cursor](https://cursor.com) agent |
-| **Cognition** | [Windsurf](https://windsurf.com), [Devin](https://devin.ai) |
-| **Sourcegraph** | [Amp](https://ampcode.com) |
-| **Block** | [Goose](https://block.github.io/goose/) |
-| open source | [Cline](https://cline.bot) |
-| open source | [OpenCode](https://opencode.ai) |
+Ranked by rough popularity. The counts mix metrics, so treat the order as a
+guide rather than a measurement.
 
-**Open-weight models work too.** The tool and the model are separate things.
-Cline, OpenCode and Goose are harnesses that run whatever model you point them
-at, including open models like Qwen, DeepSeek, Kimi and GLM served from your
-own machine through [Ollama](https://ollama.com) or
-[vLLM](https://github.com/vllm-project/vllm).
-[Qwen Code](https://github.com/QwenLM/qwen-code) is a standalone CLI of the
-same shape.
+| Tool | What it is | From |
+|------|-----------|------|
+| [GitHub Copilot](https://github.com/features/copilot), agent mode | agent | GitHub |
+| [Codex CLI](https://github.com/openai/codex) | agent | OpenAI |
+| [Cursor](https://cursor.com) agent | agent, in an editor | Anysphere |
+| [Cline](https://cline.bot) | agent, runs any model | open source |
+| [Ollama](https://ollama.com) | runs open models behind the any-model agents | open source |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | agent | Google |
+| [Windsurf](https://windsurf.com) and [Devin](https://devin.ai) | agent | Cognition |
+| [OpenCode](https://opencode.ai) | agent, runs any model | open source |
+| [Qwen Code](https://github.com/QwenLM/qwen-code) | agent, for open Qwen models | Alibaba |
+| [Goose](https://block.github.io/goose/) | agent, runs any model | Linux Foundation |
+| [Amp](https://ampcode.com) | agent | Sourcegraph |
+| [vLLM](https://github.com/vllm-project/vllm) | serves open models, like Ollama | open source |
+
+The any-model rows matter. Point Cline, OpenCode or Goose at an open model like
+Qwen, DeepSeek, Kimi or GLM running through Ollama or vLLM, and the whole stack
+is on your machine. Your data already lives locally here, and with a local
+model the reasoning does too.
 
 Some open-model providers also sell endpoints that speak the same protocol as
 the big labs, so their models can drive several of the tools above directly.
 One caution: this job is long and instruction-dense, so a small local model
 will struggle where a frontier open model will not.
-
-A fully local model is a natural fit here. The whole design of this repository
-is that your market data lives on your machine, and with a local model the
-reasoning does too.
 
 **It does not have to be a coding product at all.** A general agent with shell
 access, such as [Open Interpreter](https://openinterpreter.com), or a chat app
