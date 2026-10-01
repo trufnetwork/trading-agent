@@ -351,6 +351,7 @@ net       +$5.40
 |--------|--------------|
 | `scripts/status.sh` | the raw checks, `PHASE n of 7` plus one next action, and `SYNC_*` metrics |
 | `scripts/check-schema.sh` | verifies every table and column this repo reads is present |
+| `scripts/refresh-streams.py` | optional, caches stream names so output shows tickers |
 | `scripts/onboard.sh` | renders that. `--md` for the full block, `--line` for one line |
 | `scripts/watch-progress.sh` | emits a line when progress crosses a step boundary |
 | `scripts/ports.sh` | resolves ports, defaults first, into `.tn-env` |

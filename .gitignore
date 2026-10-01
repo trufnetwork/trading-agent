@@ -19,3 +19,4 @@ streams-cache.json
 .tn-version
 *.log
 *.log.*
+streams.json

@@ -234,8 +234,19 @@ meaningless if you populate it retrospectively.
 | [sql/volume.sql](../../sql/volume.sql) | volume and unique traders, no indexing needed |
 | [sql/markets.sql](../../sql/markets.sql) | reference queries with price semantics documented |
 
-Markets carry no on-chain metadata identifying what they are about. Human
-readable names come from the UIs at predict.truflation.com and trufscan.io.
+Markets carry no on-chain metadata identifying what they are about. Verified
+across all 259,575 streams: `main.metadata` holds operational keys only. A
+human-readable name exists nowhere on chain.
+
+Names therefore come from off chain, and they are optional. Build a local cache
+once if you want tickers in the output.
+
+```bash
+scripts/refresh-streams.py     # asks trufscan about the streams in your markets
+```
+
+Nothing depends on it. Without the cache the tools print the stream id, which is
+the identifier that actually matters.
 
 ## If you build an index
 

@@ -109,7 +109,13 @@ def main():
         pass
 
     hrs = (settle - datetime.now(timezone.utc).timestamp()) / 3600
-    print(f"MARKET  {names.get(stream, stream)}  ({stream})")
+    # Streams carry no human-readable name on chain, so a name is only available
+    # if streams.json has been built. Without it, show the id once rather than
+    # twice, and say how to get names.
+    label = names.get(stream)
+    print(f"MARKET  {label}  ({stream})" if label else f"MARKET  {stream}")
+    if not label:
+        print("        (no name cached, run scripts/refresh-streams.py for tickers)")
     print(f"        provider {provider}  stream_ref {sid}")
     print(f"        settles {datetime.fromtimestamp(settle, timezone.utc):%Y-%m-%d %H:%M UTC}"
           f"   in {hrs:.1f}h   {len(books)} order books")
