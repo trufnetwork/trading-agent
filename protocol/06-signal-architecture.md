@@ -747,19 +747,30 @@ needing no client.
 holds only operational keys (`readonly_key`, `read_visibility`, `type`,
 `stream_owner`) across all 259,575 streams. There is nothing to join to.
 
-Names come from **trufscan**, which has no documented API but whose frontend
-calls an internal batch endpoint:
+Names come from **trufscan**, and the source of truth is the public stream page.
 
 ```
-POST https://trufscan.io/api/streamlist
-{"streamIds": ["st...", ...], "isV2": false}
+GET https://trufscan.io/<data_provider>/<stream_id>
 ```
 
-It returns `display_name`, `ticker`, `description`, `unit`, `tick_rate`,
-`categories` and more. `scripts/refresh-streams.py` reads the stream ids that
-actually appear in local `ob_queries`, asks for those, and writes
-`streams.json`. Per-stream pages at `https://trufscan.io/<data_provider>/<stream_id>`
-carry the same data in a standard layout if the endpoint ever changes.
+SvelteKit embeds the record in the page's hydration payload, so a plain GET
+carries `display_name`, `ticker`, `description`, `unit`, `tick_rate` and more.
+No API key, nothing private, and the only thing that can break it is the page
+itself changing.
+
+trufscan's frontend also calls an internal batch endpoint, `POST
+/api/streamlist`. It is faster, but it is undocumented and can move without
+notice, so nothing here uses it. A public page is the more stable surface.
+
+`scripts/refresh-streams.py` reads the `(data_provider, stream_id)` pairs that
+appear in local `ob_queries` and fetches exactly those pages. The key is
+composite, so a page URL needs both halves.
+
+**The cache is optional and nothing depends on it.** It exists so the tools can
+print a ticker instead of a hash while staying offline. `edge.py` runs against
+the local database in under a second, and a name lookup per invocation would put
+an external service in that path for display text. Without the cache the tools
+print the stream id, which is the identifier that actually matters.
 
 **Do not seed names from `market-maker-bot/config.example.yaml`.** That table is
 partly wrong. It labels `ste03c2844...` "EU Inflation YoY" when trufscan calls
