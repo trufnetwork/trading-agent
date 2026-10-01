@@ -124,7 +124,6 @@ commands in a terminal the way Claude Code does. Several of them also read
 | **Cognition** | [Windsurf](https://windsurf.com), [Devin](https://devin.ai) |
 | **Sourcegraph** | [Amp](https://ampcode.com) |
 | **Block** | [Goose](https://block.github.io/goose/) |
-| open source | [Aider](https://aider.chat) |
 | open source | [Cline](https://cline.bot) |
 | open source | [OpenCode](https://opencode.ai) |
 
