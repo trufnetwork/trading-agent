@@ -1,7 +1,7 @@
 -- Order books inside ONE market. Pass the market's stream and settle time.
 --
 --   psql -h 127.0.0.1 -p 5433 -U postgres -d kwild \
---     -v stream="'stdbed26b8f3354c386b5b5ac2589529'" \
+--     -v stream="'<stream_id from sql/market-scan.sql>'" \
 --     -v settle=1789934100 -f sql/orderbooks.sql
 --
 -- A MARKET is the ladder of order books sharing (stream_id, settle_time).

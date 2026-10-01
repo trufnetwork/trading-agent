@@ -2,7 +2,7 @@
 """
 Portfolio for an agent wallet: cash, positions, cost basis, mark, and risk.
 
-    scripts/portfolio.py 0x1167edf0430a562b06a48e027a4be52c44305e0a
+    scripts/portfolio.py 0x<your agent wallet>
 
 Everything here is read from the local node. Nothing is taken on trust from a UI.
 

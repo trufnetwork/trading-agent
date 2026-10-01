@@ -14,7 +14,7 @@
 | Credited | **5000000 base units, exactly $5.00.** Nothing skimmed |
 | Bridge latency | **2.5 minutes** on this run, at 0.08 gwei. The UI quotes 15 as a deliberate upper bound, which is the right way round: quote the ceiling, beat it. Do not tell users to expect the best case |
 | Ethereum gas | ~$0.03 at 0.08 gwei |
-| MAA address | `0x1167edf0430a562b06a48e027a4be52c44305e0a`, matched local derivation exactly |
+| MAA address | `0x1167edf0…` for the deployment this was verified on, matched local derivation exactly. Yours will differ |
 
 **`fee_configs` is NOT applied to bridge deposits.** This was left explicitly
 unresolved rather than assumed, and the deposit settled it: the full 5 USDC
