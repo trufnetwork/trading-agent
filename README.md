@@ -1,48 +1,156 @@
 # trading-agent
 
-Running a local TRUF.NETWORK mainnet node so an agent can read prediction market
-state **directly from Postgres**, and trade against it through the SDK.
+**Put an agent on the order book.**
 
-The deliverable is not the node. It is a **reproducible protocol** an agent can
-download and replay on a clean machine — eventually packaged as open-source
-skills.
+This repository takes a coding agent from a bare machine to a placed trade on
+TRUF.NETWORK. Your agent can trade. Only you can withdraw.
 
-## The core idea
+## What this is
 
-Access is **asymmetric**, and that asymmetry is the whole design:
+A prediction market is a place where people bet on what a number will be. Will
+the price of gas be above or below $4.50 next Friday?
 
-- **Reads — plain SQL, no SDK.** Kwil maps each namespace to a Postgres schema of the same name
-  so the market protocol lives in schema `main`. Arbitrary queries,
-  no rate limits, no indexer's opinion of what matters.
-- **Writes — SDK only, never SQL.** That database *is* consensus state. A direct
-  INSERT forks your node and drops it out of consensus.
+You buy a share for 38 cents. If you are right, it pays a dollar. If you are
+wrong, it pays nothing.
 
-The edge is not latency. It is **reading comprehension** — the market mechanics
-that are sitting in migration files nobody reads. See
-[06-signal-architecture.md](protocol/06-signal-architecture.md); that is the
-document worth reading first.
+The price you pay is the crowd's estimate of the odds. TRUF.NETWORK runs markets
+like this on real economic data, and anyone can trade on them.
 
-## Just follow the directions
+The useful information is sitting in a database, and reading it well takes more
+patience than most people have. That is a good job for an agent.
 
-Point an agent at this repository and it can go from a bare machine to a placed
-trade.
+## Your agent can trade. Only you can withdraw.
+
+The agent gets its own wallet, bound to a rule you approve from your own
+account. You fund it with as much as you want it to trade, and you keep sole
+control of withdrawals.
+
+It can place, rest and cancel orders. **It cannot move funds out.** That is not
+a promise someone is making to you. It is a rule the network enforces, and the
+agent cannot talk its way around it.
+
+So the worst a bad agent can do is make bad trades. Start it with five dollars
+and find out.
+
+**What it costs.** Placing, resting or cancelling an order costs nothing. A 2%
+fee is taken on winnings, at settlement.
+
+## Read, reason, trade
+
+**Read.** The agent runs its own copy of the network on your machine and reads
+markets, order books and data streams as plain SQL. It reads the chain itself,
+not an API that decided in advance which questions matter.
+
+**Reason.** It checks how a contract resolves by reading the contract, not a
+description of it. Resolution is a published computation that anyone can re-run.
+
+**Trade.** Orders are signed transactions submitted through the open-source
+SDKs, through the permission boundary you approved.
+
+## What the agent actually does
+
+You point it at this repository and tell it to follow the directions. Then it:
+
+1. Installs and starts its own copy of the network, which takes a few hours
+2. Walks you through giving it a wallet, where you approve and fund it
+3. Reads the markets and tells you which one looks mispriced, and why
+4. Places the trade and tracks the position
+
+You step in three times: once to install a database tool that needs an admin
+password, once to approve the wallet, and once to send the money. Everything
+else it handles.
+
+This was built by doing it. An agent followed these instructions on a wiped
+machine, took about five hours, placed a real trade, and won. It also found two
+genuine bugs in the network software on the way, both filed and one already
+fixed.
+
+## Which AI agents can run this
+
+Anything in the repository is plain text and shell scripts. There is no app to
+install and no service to sign up for. Any coding agent that can read files and
+run commands on your machine should be able to follow it.
+
+**Verified:** [Claude Code](https://claude.com/claude-code). Every step in this
+repository was run by it, on a real machine, with real money.
+
+**Should work, not yet tested.** These are the popular coding agents that run
+commands in a terminal the way Claude Code does. Several of them also read
+`AGENTS.md`, which is the file this repository uses to orient an agent.
+
+| Agent | Made by |
+|-------|---------|
+| [Codex CLI](https://github.com/openai/codex) | OpenAI |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Google |
+| [Cursor](https://cursor.com) | Anysphere |
+| [Windsurf](https://windsurf.com) | Cognition |
+| [GitHub Copilot](https://github.com/features/copilot) agent mode | GitHub |
+| [Aider](https://aider.chat) | open source |
+| [Cline](https://cline.bot) | open source |
+| [OpenCode](https://opencode.ai) | open source |
+| [Goose](https://block.github.io/goose/) | Block |
+| [Amp](https://ampcode.com) | Sourcegraph |
+
+If you try one of these, the thing to watch is whether it keeps working through
+a wait that lasts several hours. That is the step most agents handle badly.
+
+## Quickstart
+
+**What you need first.** A computer you can leave running for a few hours,
+about 30 GB of free disk, and five dollars you would not miss.
+
+**Step one.** Open your coding agent in an empty folder and give it this:
 
 ```
 Clone https://github.com/trufnetwork/trading-agent and follow RUNBOOK.md
 ```
 
-[RUNBOOK.md](RUNBOOK.md) is the ordered path, and it assumes things work.
-[FIELD-MANUAL.md](FIELD-MANUAL.md) is the fallback, indexed by symptom, for when
-they do not. `scripts/status.sh` reports
-`PHASE n of 7` and the single next action, works on a bare clone, and is how a
-later session resumes without guessing.
+**Step two.** Let it work. It will tell you where it is, like this:
 
-Verified end to end on a cleared machine: about 5 hours from nothing to a
-placed trade, of which 18 minutes is downloading, 39 minutes is loading the
-database and the rest is replaying blocks.
+```
+PHASE 4 of 7
+NEXT: WAIT for the restore, then re-run this script
+```
 
-Three phases need a human, and the runbook marks them: installing the Postgres
-16 client, approving the agent wallet, and funding it.
+**Step three.** Answer when it asks. It stops three times and tells you exactly
+what it needs. One of those is sending the money, and that is the only step
+where anything leaves your control.
+
+**Step four.** It picks a market, explains the reasoning, and places the trade.
+Then it shows you what you hold.
+
+That is the whole thing. Everything below this point is detail, mostly written
+for the agent rather than for you.
+
+More on the product at [truf.network/agentic-trading](https://truf.network/agentic-trading).
+
+## The core idea
+
+Access is **asymmetric**, and that asymmetry is the whole design:
+
+- **Reads are plain SQL, no SDK.** Kwil maps each namespace to a Postgres schema of the same name
+  so the market protocol lives in schema `main`. Arbitrary queries,
+  no rate limits, no indexer's opinion of what matters.
+- **Writes are SDK only, never SQL.** That database *is* consensus state. A direct
+  INSERT forks your node and drops it out of consensus.
+
+The edge is not latency. It is **reading comprehension**, because the market
+mechanics are sitting in migration files nobody reads.
+[06-signal-architecture.md](protocol/06-signal-architecture.md) is the document
+worth reading first.
+
+## Verification
+
+Run end to end on a machine wiped back to nothing: about **5 hours** from bare
+metal to a placed trade. Roughly 18 minutes downloading a copy of the database,
+39 minutes loading it, and 3.5 hours catching up on recent activity.
+
+The trade that followed: **$3.42 in, $8.82 out**, a 158% return on a 14 hour
+position. One trade proves the path works, not that the strategy does.
+
+Two upstream bugs were found by using it rather than by reading code. A
+settlement flaw that can pay out twice or not at all, and an error-logging
+defect that makes node connection failures undiagnosable. Both filed, one fixed.
 
 ## Skills
 
@@ -98,7 +206,7 @@ the measurements, the reasoning, and the mistakes that produced each rule.
 
 **Every claim is marked verified or not.** Docs cite the migration or source
 file that proves them. Anything unconfirmed says so. Setup steps carry an
-explicit verification command — a step is not done because it ran, it is done
+explicit verification command. A step is not done because it ran, it is done
 because a check passed.
 
 This matters more than usual: an agent replaying this protocol has no way to
