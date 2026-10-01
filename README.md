@@ -5,6 +5,9 @@
 This repository takes a coding agent from a bare machine to a placed trade on
 TRUF.NETWORK. Your agent can trade. Only you can withdraw.
 
+The whole market lives in a database on your machine, updating live. That lets
+an agent run the kind of analysis that used to need a professional trading desk.
+
 ## What this is
 
 A prediction market is a place where people bet on what a number will be. Will
@@ -46,6 +49,42 @@ description of it. Resolution is a published computation that anyone can re-run.
 
 **Trade.** Orders are signed transactions submitted through the open-source
 SDKs, through the permission boundary you approved.
+
+## Analysis that used to need a trading desk
+
+Most traders see a chart and the best current price. The full picture costs
+extra, and it always has. Depth-of-book feeds, tick history, and flow data are
+what professional desks pay tens of thousands a year for.
+
+Here, all of it is one database on your laptop, updating as blocks arrive. No
+rate limits, no metering, no API deciding what you are allowed to ask. Some of
+what that opens up:
+
+- **Read the whole book, not the top of it.** Every resting order at every
+  price, for every market at once. Spot thin books, walls, and spreads worth
+  making in a single query.
+- **Replay the tape.** Every fill is recorded with its counterparty and its
+  block. Watch who crossed the spread, at what level, and when.
+- **Track any trader.** Positions and cash flows are tied to wallets, so an
+  agent can reconstruct any account's history, win rate, and style. Find who
+  keeps winning and study what they do.
+- **Audit whole ladders for mispriced odds.** The bands of one market should
+  price like a single probability distribution. When they do not sum sensibly,
+  that gap is tradeable, and the agent can check every ladder at once.
+- **Price markets against the data they settle on.** The index history lives in
+  the same database as the market. Fit a model to one, compare it to the ask on
+  the other, and the difference is your edge, stated in cents.
+- **Study how books react to news.** When a data point lands, every book's
+  response is on the record, timestamped by block. Measure reaction speed and
+  size across the entire history.
+- **Know exactly how settlement works.** The resolving computation is published
+  code. An agent can read it, re-run it, and know what will happen before it
+  happens, instead of trusting a description.
+
+None of this needs a subscription. It needs patience and SQL, which is the
+point of giving the job to an agent. The scripts in this repository, like
+[market-scan](sql/market-scan.sql) and [edge.py](scripts/edge.py), are working
+examples of several of these.
 
 ## What the agent actually does
 
