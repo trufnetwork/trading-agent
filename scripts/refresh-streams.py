@@ -4,63 +4,76 @@ Refresh streams.json: stream_id -> name and metadata, from trufscan.
 
 Streams carry NO human-readable name on chain. main.metadata holds only
 operational keys (readonly_key, read_visibility, type, stream_owner), verified
-across all 259,575 streams. Names must come from off-chain.
+across all 259,575 streams. Names must come from off chain.
 
-trufscan has no public/documented API, but its SvelteKit frontend calls an
-internal endpoint that takes a batch of stream ids:
+Source of truth is the public stream page, one plain GET per stream:
 
-    POST https://trufscan.io/api/streamlist
-    {"streamIds": ["st...", ...], "isV2": false}
+    https://trufscan.io/<data_provider>/<stream_id>
 
-It returns display_name, ticker, description, unit, tick_rate, categories and
-more. This script reads the stream ids that actually appear in our local
-ob_queries, asks for exactly those, and writes streams.json.
+SvelteKit embeds the record in the page's hydration payload, so the metadata is
+in the HTML that any client receives. No API key, no undocumented endpoint, and
+nothing that can be changed out from under us without the page itself changing.
 
-    scripts/refresh-streams.py           # streams in live markets
-    scripts/refresh-streams.py --all     # streams in all markets, settled too
+trufscan does expose an internal batch endpoint that the frontend calls. It is
+faster, but it is undocumented and can move without notice, so this does not
+use it.
 
-Being an internal endpoint, it may change without notice. If it breaks, the
-per-stream page at https://trufscan.io/<data_provider>/<stream_id> carries the
-same information in a standard layout and can be scraped instead.
+Pairs are read from the markets in the local node, so it asks about exactly the
+streams you can trade and nothing else.
 """
 
 import argparse
 import json
 import pathlib
 import sys
+import re
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from markets import q, decode_components  # noqa: E402
 
-ENDPOINT = "https://trufscan.io/api/streamlist"
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/131.0 Safari/537.36")
 OUT = pathlib.Path(__file__).parent.parent / "streams.json"
 
 
-def stream_ids(include_settled):
+def stream_pairs(include_settled):
+    """The (data_provider, stream_id) pairs in this node's markets.
+
+    The key is composite. Two providers can publish the same stream_id, so a
+    page URL needs both halves.
+    """
     where = "" if include_settled else "WHERE NOT settled"
-    ids = set()
+    pairs = set()
     for r in q(f"SELECT encode(query_components,'hex') AS c FROM main.ob_queries {where}"):
         d = decode_components(r["c"] or "")
-        if d.get("stream_id"):
-            ids.add(d["stream_id"])
-    return sorted(ids)
+        if d.get("stream_id") and d.get("data_provider"):
+            pairs.add((d["data_provider"].lower(), d["stream_id"]))
+    return sorted(pairs, key=lambda x: x[1])
 
 
-def fetch(ids):
-    """Ask trufscan for these ids. Batched, since the endpoint takes a list."""
-    out = []
-    for i in range(0, len(ids), 50):
-        chunk = ids[i:i + 50]
-        body = json.dumps({"streamIds": chunk, "isV2": False}).encode()
-        req = urllib.request.Request(
-            ENDPOINT, data=body,
-            headers={"Content-Type": "application/json", "User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=45) as r:
-            out.extend(json.loads(r.read()))
-    return out
+def fetch_one(provider, sid):
+    """Read one stream's public page and pull its record out of the payload."""
+    url = f"https://trufscan.io/{provider}/{sid}"
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=45) as r:
+        html = r.read().decode("utf-8", "replace")
+    m = re.search(r'stream_details:\[\{(.*?)\}\]', html, re.S)
+    if not m:
+        return None
+    blob = m.group(1)
+    def field(name):
+        f = re.search(name + r':"(.*?)"', blob)
+        return f.group(1) if f else None
+    if not field("stream_id"):
+        return None
+    return {"stream_id": field("stream_id"),
+            "data_provider": field("data_provider") or provider,
+            "ticker": field("ticker"),
+            "display_name": field("display_name"),
+            "type": field("type"),
+            "unit": field("unit"),
+            "tick_rate": field("tick_rate")}
 
 
 def main():
@@ -69,17 +82,26 @@ def main():
                     help="include streams from settled markets")
     a = ap.parse_args()
 
-    ids = stream_ids(a.all)
-    print(f"{len(ids)} distinct streams in {'all' if a.all else 'live'} markets")
+    pairs = stream_pairs(a.all)
+    print(f"{len(pairs)} distinct streams in {'all' if a.all else 'live'} markets")
 
-    meta = fetch(ids)
-    print(f"{len(meta)} returned by trufscan")
+    meta = []
+    for i, (pv, sid) in enumerate(pairs, 1):
+        try:
+            r = fetch_one(pv, sid)
+        except Exception as e:
+            print(f"  [{i}/{len(pairs)}] {sid} failed: {e}", file=sys.stderr)
+            continue
+        if r:
+            meta.append(r)
+        print(f"  [{i}/{len(pairs)}] {sid} {'ok' if r else 'no record on page'}")
+    print(f"{len(meta)} of {len(pairs)} resolved")
 
     doc = {
         "_comment": ("stream_id -> metadata from trufscan's internal "
-                     "/api/streamlist. Streams have NO on-chain name. "
+                     "public stream pages. Streams have NO on-chain name. "
                      "Regenerate with scripts/refresh-streams.py."),
-        "_source": ENDPOINT,
+        "_source": "https://trufscan.io/<data_provider>/<stream_id>",
     }
     for s in sorted(meta, key=lambda x: x.get("display_name") or ""):
         sid = s["stream_id"]
@@ -96,7 +118,7 @@ def main():
     OUT.write_text(json.dumps(doc, indent=2) + "\n")
     print(f"wrote {OUT}")
 
-    missing = set(ids) - {s["stream_id"] for s in meta}
+    missing = {sid for _, sid in pairs} - {s["stream_id"] for s in meta}
     if missing:
         print(f"WARNING: no metadata for {len(missing)}: {sorted(missing)}")
 

@@ -22,6 +22,7 @@ the 'st...' stream id -- verified against live indexer data 2026-09-17.
 import argparse
 import json
 import os
+import pathlib
 import subprocess
 import sys
 from datetime import datetime, timezone

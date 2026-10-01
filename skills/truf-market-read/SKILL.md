@@ -242,8 +242,13 @@ Names therefore come from off chain, and they are optional. Build a local cache
 once if you want tickers in the output.
 
 ```bash
-scripts/refresh-streams.py     # asks trufscan about the streams in your markets
+scripts/refresh-streams.py     # reads the public page for each of your streams
 ```
+
+It fetches `https://trufscan.io/<data_provider>/<stream_id>`, one plain GET per
+stream, and pulls the record out of the page's hydration payload. No API key and
+no undocumented endpoint, so the only thing that can break it is the page
+itself changing.
 
 Nothing depends on it. Without the cache the tools print the stream id, which is
 the identifier that actually matters.
