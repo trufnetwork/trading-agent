@@ -105,8 +105,11 @@ machine, took about five hours, placed a real trade, and won.
 ## Which AI agents can run this
 
 Anything in the repository is plain text and shell scripts. There is no app to
-install and no service to sign up for. Any coding agent that can read files and
-run commands on your machine should be able to follow it.
+install and no service to sign up for.
+
+The requirement is not "a coding tool." It is three abilities: read files, run
+commands on your machine, and stay on task for hours. Anything with those three
+can follow this.
 
 **Verified:** [Claude Code](https://claude.com/claude-code). Every step in this
 repository was run by it, on a real machine, with real money.
@@ -127,7 +130,30 @@ commands in a terminal the way Claude Code does. Several of them also read
 | open source | [Cline](https://cline.bot) |
 | open source | [OpenCode](https://opencode.ai) |
 
-If you try one of these, the thing to watch is whether it keeps working through
+**Open-weight models work too.** The tool and the model are separate things.
+Cline, OpenCode and Goose are harnesses that run whatever model you point them
+at, including open models like Qwen, DeepSeek, Kimi and GLM served from your
+own machine through [Ollama](https://ollama.com) or
+[vLLM](https://github.com/vllm-project/vllm).
+[Qwen Code](https://github.com/QwenLM/qwen-code) is a standalone CLI of the
+same shape.
+
+Some open-model providers also sell endpoints that speak the same protocol as
+the big labs, so their models can drive several of the tools above directly.
+One caution: this job is long and instruction-dense, so a small local model
+will struggle where a frontier open model will not.
+
+A fully local model is a natural fit here. The whole design of this repository
+is that your market data lives on your machine, and with a local model the
+reasoning does too.
+
+**It does not have to be a coding product at all.** A general agent with shell
+access, such as [Open Interpreter](https://openinterpreter.com), or a chat app
+wired to your terminal through an
+[MCP](https://modelcontextprotocol.io) server, has the three abilities and can
+follow the same instructions.
+
+If you try any of these, the thing to watch is whether it keeps working through
 a wait that lasts several hours. That is the step most agents handle badly.
 
 ## Quickstart
