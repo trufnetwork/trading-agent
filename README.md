@@ -78,18 +78,18 @@ repository was run by it, on a real machine, with real money.
 commands in a terminal the way Claude Code does. Several of them also read
 `AGENTS.md`, which is the file this repository uses to orient an agent.
 
-| Agent | Made by |
-|-------|---------|
-| [Codex CLI](https://github.com/openai/codex) | OpenAI |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Google |
-| [Cursor](https://cursor.com) | Anysphere |
-| [Windsurf](https://windsurf.com) | Cognition |
-| [GitHub Copilot](https://github.com/features/copilot) agent mode | GitHub |
-| [Aider](https://aider.chat) | open source |
-| [Cline](https://cline.bot) | open source |
-| [OpenCode](https://opencode.ai) | open source |
-| [Goose](https://block.github.io/goose/) | Block |
-| [Amp](https://ampcode.com) | Sourcegraph |
+| Maker | Agent |
+|-------|-------|
+| **OpenAI** | [Codex CLI](https://github.com/openai/codex) |
+| **Google** | [Gemini CLI](https://github.com/google-gemini/gemini-cli) |
+| **GitHub** | [Copilot](https://github.com/features/copilot), agent mode |
+| **Cursor** | [Cursor](https://cursor.com) agent |
+| **Cognition** | [Windsurf](https://windsurf.com), [Devin](https://devin.ai) |
+| **Sourcegraph** | [Amp](https://ampcode.com) |
+| **Block** | [Goose](https://block.github.io/goose/) |
+| open source | [Aider](https://aider.chat) |
+| open source | [Cline](https://cline.bot) |
+| open source | [OpenCode](https://opencode.ai) |
 
 If you try one of these, the thing to watch is whether it keeps working through
 a wait that lasts several hours. That is the step most agents handle badly.
