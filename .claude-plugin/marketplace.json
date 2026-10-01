@@ -1,0 +1,13 @@
+{
+  "name": "trading-agent",
+  "owner": {
+    "name": "Vin Armani"
+  },
+  "plugins": [
+    {
+      "name": "truf-agent",
+      "source": "./",
+      "description": "Run a TRUF.NETWORK node, read prediction markets from Postgres, and trade through the SDK."
+    }
+  ]
+}

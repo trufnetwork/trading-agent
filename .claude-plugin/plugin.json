@@ -1,0 +1,16 @@
+{
+  "name": "truf-agent",
+  "version": "0.1.0",
+  "description": "Run a TRUF.NETWORK node, read prediction markets from Postgres, and trade through the SDK.",
+  "author": {
+    "name": "Vin Armani"
+  },
+  "homepage": "https://github.com/trufnetwork/trading-agent",
+  "keywords": [
+    "truf",
+    "prediction-markets",
+    "kwil",
+    "postgres",
+    "trading"
+  ]
+}

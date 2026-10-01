@@ -1,0 +1,180 @@
+{
+  "_comment": "stream_id -> metadata from trufscan's internal /api/streamlist. Streams have NO on-chain name. Regenerate with scripts/refresh-streams.py.",
+  "_source": "https://trufscan.io/api/streamlist",
+  "st5d89c5c1647bb158f3fc80b308aea1": {
+    "name": "Alphabet Earnings Per Share",
+    "ticker": "GOOGLEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "stbe7ce92b216b22efeeebc7a89f7df9": {
+    "name": "Amazon Earnings Per Share",
+    "ticker": "AMZNEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "st2c1851a1afadd1c5094e8f09a069f3": {
+    "name": "Apple Earnings Per Share",
+    "ticker": "AAPLEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "st8f1e62d3a130572ec468dda082f889": {
+    "name": "BLS Consumer Price Index",
+    "ticker": null,
+    "unit": "$USD",
+    "tick_rate": "daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "stdbed26b8f3354c386b5b5ac2589529": {
+    "name": "Composite Ethereum Staking Rate",
+    "ticker": "CESR",
+    "unit": "rate",
+    "tick_rate": "daily",
+    "data_provider": "0x1566e5dad82127d2193a504100ec16c17407f3da",
+    "type": "primitive"
+  },
+  "st7141645dad622b975881c03b57ba96": {
+    "name": "Global Big Mac Delivery Index",
+    "ticker": "BMDI",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0x480c4dd77b960a900fc7598f202b52b68fc107f8",
+    "type": "primitive"
+  },
+  "st52ef26cfbdb7806e6ba3a7a3826680": {
+    "name": "Meta Earnings Per Share",
+    "ticker": "METAEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "st99d274b242277ea4474fbfbddf086c": {
+    "name": "Microsoft Earnings Per Share",
+    "ticker": "MSFTEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "st4a6b4035f575b167af8f3a92ce393b": {
+    "name": "Microsoft Earnings Per Share \u2014 FMP",
+    "ticker": "MSFTEPS.FMP",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0x6058fec804025b9e8053903c9a7091a27da100c4",
+    "type": "primitive"
+  },
+  "stcfc1ee47859e1ce657ba2a3e4a4225": {
+    "name": "NVIDIA Earnings Per Share",
+    "ticker": "NVDAEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "ste1f46f1073eb22dde5b76ae031bb4a": {
+    "name": "Netflix Standard Price Index",
+    "ticker": "NSPI",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0x480c4dd77b960a900fc7598f202b52b68fc107f8",
+    "type": "primitive"
+  },
+  "st1d6d41423cd9746a81ea6063b1345e": {
+    "name": "PCE Inflation Index",
+    "ticker": null,
+    "unit": "$USD",
+    "tick_rate": "daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "st285abcc3002307b8a20fd50370c088": {
+    "name": "Spurious Data",
+    "ticker": "SPD",
+    "unit": "units",
+    "tick_rate": "hourly",
+    "data_provider": "0xd509b4110e27e4d0e4e5905f137695d29dffc04c",
+    "type": "primitive"
+  },
+  "stfe494c2608b595fb36b486a6c41747": {
+    "name": "Stream stfe494c2608b595fb36b486a6c41747",
+    "ticker": null,
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0x572fe58decedf23d5d2b26dd9e8341a86bce28e2",
+    "type": "primitive"
+  },
+  "stc6f43f7c1221e4376d13abba1b1a91": {
+    "name": "Tesla Earnings Per Share",
+    "ticker": "TSLAEPS",
+    "unit": "$USD",
+    "tick_rate": "unknown",
+    "data_provider": "0xcdd153679aa12e9e57c65b9123a963ded2049af5",
+    "type": "primitive"
+  },
+  "st69e3ea7f417ffa460fb7f83d9ed44d": {
+    "name": "Truflation Argentina CPI Inflation index",
+    "ticker": "TruCPI-AR",
+    "unit": "%",
+    "tick_rate": "daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "ste03c2844c591a10d8a524d14d23066": {
+    "name": "Truflation PCE Index",
+    "ticker": "TRUFPCE",
+    "unit": "%",
+    "tick_rate": "daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "st2f4cdf995b7916a3134080c099af53": {
+    "name": "Truflation UK CPI Inflation Index",
+    "ticker": "TruCPI-UK",
+    "unit": "%",
+    "tick_rate": "daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "st908370bca6840a648f48e7346f7c61": {
+    "name": "Truflation US CPI Gasoline Price Index",
+    "ticker": "TruCPIGas-US",
+    "unit": "$USD",
+    "tick_rate": "$",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "st1e321de22ece39a258bc2588dd2871": {
+    "name": "Truflation US CPI Inflation Index",
+    "ticker": "TruCPI-US",
+    "unit": "%",
+    "tick_rate": "daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "stf6584cf470744723c90130130cb7db": {
+    "name": "Truflation US Eggs Index",
+    "ticker": "TruEggs-US",
+    "unit": "$USD / dozen",
+    "tick_rate": "Daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  },
+  "st6b5385c5ed5a4b616e90798cc924c3": {
+    "name": "TruflationPredict NACHO Tracker",
+    "ticker": "NACHO",
+    "unit": "Ships",
+    "tick_rate": "Daily",
+    "data_provider": "0x4710a8d8f0d845da110086812a32de6d90d7ff5c",
+    "type": "primitive"
+  }
+}
