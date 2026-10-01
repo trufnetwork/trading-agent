@@ -100,9 +100,7 @@ password, once to approve the wallet, and once to send the money. Everything
 else it handles.
 
 This was built by doing it. An agent followed these instructions on a wiped
-machine, took about five hours, placed a real trade, and won. It also found two
-genuine bugs in the network software on the way, both filed and one already
-fixed.
+machine, took about five hours, placed a real trade, and won.
 
 ## Which AI agents can run this
 
@@ -186,10 +184,6 @@ metal to a placed trade. Roughly 18 minutes downloading a copy of the database,
 
 The trade that followed: **$3.42 in, $8.82 out**, a 158% return on a 14 hour
 position. One trade proves the path works, not that the strategy does.
-
-Two upstream bugs were found by using it rather than by reading code. A
-settlement flaw that can pay out twice or not at all, and an error-logging
-defect that makes node connection failures undiagnosable. Both filed, one fixed.
 
 ## Skills
 
