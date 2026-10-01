@@ -111,20 +111,22 @@ The requirement is not "a coding tool." It is three abilities: read files, run
 commands on your machine, and stay on task for hours. Anything with those three
 can follow this.
 
-**Verified:** [Claude Code](https://claude.com/claude-code). Every step in this
-repository was run by it, on a real machine, with real money.
+The table lists the popular tools with those three abilities, or that put an
+open model behind one that does. Several also read `AGENTS.md`, which is the
+file this repository uses to orient an agent.
 
-**Should work, not yet tested.** These are the popular tools with those three
-abilities, or that put an open model behind one that does. Several also read
-`AGENTS.md`, which is the file this repository uses to orient an agent.
+Only Claude Code is **verified**, meaning every step in this repository was run
+by it, on a real machine, with real money. The rest should work and have not
+been tested yet.
 
-Ranked by rough popularity. The counts mix metrics, so treat the order as a
+Ranked by rough user count. The counts mix metrics, so treat the order as a
 guide rather than a measurement.
 
 | Tool | What it is | From |
 |------|-----------|------|
 | [GitHub Copilot](https://github.com/features/copilot), agent mode | agent | GitHub |
 | [Codex CLI](https://github.com/openai/codex) | agent | OpenAI |
+| [Claude Code](https://claude.com/claude-code), **verified** | agent | Anthropic |
 | [Cursor](https://cursor.com) agent | agent, in an editor | Anysphere |
 | [Cline](https://cline.bot) | agent, runs any model | open source |
 | [Ollama](https://ollama.com) | runs open models behind the any-model agents | open source |
