@@ -33,6 +33,14 @@ kwil_erc20_meta.transaction_history:block_height,block_timestamp
 printf 'node binary : %s\n' "$(pgrep -af 'kwild[^[:space:]]* start' 2>/dev/null | grep -o 'kwild[^ /]*' | head -1 || echo '?')"
 printf 'database    : %s:%s/%s\n\n' "$PGHOST" "$PGPORT" "$PGDB"
 
+# An unreachable database must not read as a pass. Without this, a failed
+# connection returns no rows, "no rows missing" looks like success, and a
+# machine with no node at all reports its schema as complete.
+if ! psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDB" -tAXc 'SELECT 1' >/dev/null 2>&1; then
+  echo "Cannot check: no database answering on $PGHOST:$PGPORT/$PGDB."
+  exit 2
+fi
+
 # One query. Cheap enough to run on every status check rather than only after
 # an upgrade, which is the wrong trigger anyway: schema drift comes from
 # migrations, and those can land without the binary changing.

@@ -33,11 +33,12 @@ command -v go >/dev/null && ok "go $(go version 2>/dev/null | awk '{print $3}')"
 NOWV=$(pgrep -af 'kwild[^[:space:]]* start' 2>/dev/null | grep -o 'kwild[^ /]*' | head -1)
 [ -n "${NOWV:-}" ] && ok "node binary $NOWV"
 if [ -x "$ROOT/scripts/check-schema.sh" ]; then
-  if "$ROOT/scripts/check-schema.sh" >/dev/null 2>&1; then
-    ok "schema: every table and column this repo reads is present"
-  else
-    no "schema changed, run scripts/check-schema.sh"
-  fi
+  "$ROOT/scripts/check-schema.sh" >/dev/null 2>&1; rc=$?
+  case $rc in
+    0) ok "schema: every table and column this repo reads is present" ;;
+    2) : ;;   # no database yet, nothing to check, phase 2 reports it
+    *) no "schema changed, run scripts/check-schema.sh" ;;
+  esac
 fi
 
 echo "=== 2. postgres ==="
