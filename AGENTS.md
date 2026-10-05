@@ -17,13 +17,15 @@ Every entry in it was hit on a real run. If you are resuming, or you are not sur
 in, run the status script first and do what it tells you.
 
 ```bash
-scripts/status.sh         # PHASE n of 7, and the single next action
-scripts/onboard.sh --md   # the same thing as markdown, to paste into your reply
+scripts/status.sh         # PHASE n of 7, and STOP on a phase not yet shown
+scripts/onboard.sh --md   # the block to end your turn with
+scripts/status.sh --go    # after the person replies: the single next action
 ```
 
-**Show progress where the person can see it.** They cannot see your tool calls.
-At every phase, run `scripts/onboard.sh --md` and paste its whole output into
-your own reply. `status.sh` reminds you with a `SHOW:` line each time.
+**Show progress where the person can see it.** They see only the final message
+of your turn, not tool calls and often not the text between them. At every new
+phase, end your turn with the whole output of `scripts/onboard.sh --md`, and
+continue with `scripts/status.sh --go` once they reply.
 
 Three phases need a human: installing the Postgres 16 client, approving the
 agent wallet, and funding it. Stop and ask rather than trying to work around

@@ -3,39 +3,45 @@
 Follow this in order. It takes you from a bare machine to a placed trade on
 TRUF.NETWORK mainnet, using real money.
 
-**The loop is three steps, and the middle one is not optional.**
+**The loop is three steps, and the stop in the middle is not optional.**
 
-1. **Status.** Run `scripts/status.sh`. It prints `PHASE n of 7`, one `NEXT:`
-   action, and a `SHOW:` reminder.
-2. **Show.** Run `scripts/onboard.sh --md` and paste its whole output into your
-   reply. Do this before acting.
-3. **Act.** Do the `NEXT:` action, then go back to step 1.
+1. **Status.** Run `scripts/status.sh`. It prints `PHASE n of 7`. On a phase the
+   person has not seen yet, it prints `STOP:` lines and no next action.
+2. **Show and stop.** Run `scripts/onboard.sh --md`. End your turn with its whole
+   output, verbatim, as your final message. Do nothing else in that turn.
+3. **Act.** When the person replies, run `scripts/status.sh --go`. It prints one
+   `NEXT:` action. Do it, then go back to step 1.
 
 `status.sh` is safe to run at any time and works on a bare clone. **If you are
 resuming a session, start with it.** If a check fails, go to
 [FIELD-MANUAL.md](FIELD-MANUAL.md) and look up the symptom rather than guessing
 at the cause.
 
-## Show progress in your reply (MANDATORY)
+## Show progress in your final message (MANDATORY)
 
-**The person cannot see your tool calls.** Output from a command you run is
-collapsed or hidden in their view. If the status block only ever appears inside
-a tool result, they are watching a blank screen while you work.
+**The person sees only the final message of your turn.** Output from a command
+you run is hidden from them. Text you write between tool calls is often hidden
+too, so a block pasted there does not count as shown.
 
-So the block has to be in your own message. `scripts/onboard.sh --md` prints
-exactly what to paste: a banner on the first run, a progress bar, the phase
-table, and a panel saying what is happening or what the person needs to do.
+That is why every new phase ends your turn. `scripts/onboard.sh --md` prints
+exactly what the final message should be: a banner at the start, a progress bar,
+the phase table, and a panel saying what happens next. Paste it verbatim,
+because the panel text was written for the person.
 
-Paste it when you start, at every phase change, and whenever you hand back to
-the person. Once per reply is enough. Paste it verbatim, because the panel text
-for the human steps was written for the person and should reach them unedited.
+Two tested runs of this runbook read an instruction to show progress, ran the
+display command at every phase, and showed the person nothing until the end.
+Both were stopped. The gate in `status.sh` exists because a written instruction
+was not enough.
 
-A first run of this runbook that was tested did all of phases 1 to 3 without
-showing anything, and the person stopped it. Do not be that run.
+**If the person asks what is happening, they cannot see your work.** Stop at
+once and end your turn with the block. Do not answer in passing and carry on.
+
+Only pass `--go` after the person has replied to a block. If nobody is present,
+as in an unattended run, `--go` straight away is the honest choice.
 
 If your runtime has a todo or task-list tool, mirror the seven phases there as
 well, with exactly one in progress at a time. That is a bonus on top of the
-pasted block, never a substitute for it.
+block, never a substitute for it.
 
 ## Rules for the agent following this
 
@@ -102,7 +108,8 @@ The commands are in section 2 of that skill. Hand them over and wait.
 
 **Check:** `psql --version` and `pg_dump --version` both report 16.x.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 ## Phase 2. Postgres
 
@@ -131,7 +138,8 @@ done
 
 **Check:** `scripts/status.sh` reports postgres reachable.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 Confirm the database that answered is **yours**. Another Kwil node's Postgres
 answers a connection and returns plausible data from a different chain. See
@@ -155,7 +163,8 @@ which is **mainnet**. The full command is in section 5 of the node skill.
 anything else you have initialised a private network that will sync instantly
 and contain nothing.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 ### Then fix two insecure defaults. This is not optional.
 
@@ -226,7 +235,8 @@ log, so check its output rather than the RPC directly.
 
 **Check:** `scripts/status.sh` reports `at tip`.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 If it never starts, or the estimate swings wildly, see
 [FIELD-MANUAL.md](FIELD-MANUAL.md) under **Sync never starts** and **Sync speed
@@ -245,7 +255,8 @@ analysis scripts need this binary. `keygen` writes `agent/agent.key` at mode
 
 **Check:** `scripts/status.sh` shows the binary built and the key present.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 ## Phase 6. Wallet — **HUMAN**
 
@@ -276,7 +287,8 @@ echo "TN_MAA=0x..." >> .tn-env
 
 **Check:** `scripts/status.sh` reports a USDC balance.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 ## Phase 7. Trade
 
@@ -301,7 +313,8 @@ scripts/portfolio.py <maa>
 **Check:** the position appears in `portfolio.py`, marked at the best
 other-party bid.
 
-**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+**Show:** run `scripts/status.sh`. It will tell you to stop and end your turn
+with the `scripts/onboard.sh --md` block.
 
 Before trusting any number you derived yourself, read **Right data, wrong
 meaning** in [FIELD-MANUAL.md](FIELD-MANUAL.md). It is the failure that costs

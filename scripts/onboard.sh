@@ -27,7 +27,7 @@ NAMES=("Tools" "Postgres" "Node config" "Sync" "SDK helper" "Wallet" "Trade")
 
 render(){
   local out phase next
-  out="$("$ROOT/scripts/status.sh" 2>/dev/null)"
+  out="$(TN_PEEK=1 "$ROOT/scripts/status.sh" 2>/dev/null)"
   phase=$(printf '%s' "$out" | sed -n 's/^PHASE \([0-9]*\) of.*/\1/p'); phase=${phase:-1}
   # TN_DEMO_PHASE renders a given phase without changing anything, for reviewing
   # the human-facing copy without having to be in that state.
@@ -116,7 +116,7 @@ render(){
 # renders it. Anything written to stdout inside a tool call is not shown.
 render_md(){
   local out phase next i name mark detail bar done_n
-  out="$("$ROOT/scripts/status.sh" 2>/dev/null)"
+  out="$(TN_PEEK=1 "$ROOT/scripts/status.sh" 2>/dev/null)"
   phase=$(printf '%s' "$out" | sed -n 's/^PHASE \([0-9]*\) of.*/\1/p'); phase=${phase:-1}
   phase=${TN_DEMO_PHASE:-$phase}
   next=$(printf '%s' "$out" | sed -n 's/^NEXT: //p')
@@ -129,9 +129,16 @@ render_md(){
   done
 
   # Addressed to the agent. An HTML comment, so it vanishes when rendered.
-  printf '<!-- agent: paste this whole block into your reply to the person, verbatim. Output inside a tool call is not shown to them. -->\n\n'
-  # The banner rides along on the first run, so nobody has to copy it by hand.
-  if [ ! -f "$ROOT/.tn-banner" ] || [ "${2:-}" = "--banner" ]; then
+  local pending=0
+  [ "$(cat "$ROOT/.tn-shown" 2>/dev/null || true)" = "$phase" ] || pending=1
+  if [ "$pending" = 1 ]; then
+    printf '<!-- agent: END YOUR TURN NOW with this whole block, verbatim, as your final message. Tool output and text written between tool calls are not shown to the person. After they reply, run scripts/status.sh --go. -->\n\n'
+  else
+    printf '<!-- agent: put this whole block, verbatim, in the final message of your turn. Tool output and text written between tool calls are not shown to the person. -->\n\n'
+  fi
+  local wk='⚙️ Working'; [ "$pending" = 1 ] && wk='▶️ Up next'
+  # The banner rides along until the person has seen a first block and replied.
+  if [ ! -f "$ROOT/.tn-shown" ] || [ "${2:-}" = "--banner" ]; then
     printf '```\n'
     printf '████████╗██████╗ ██╗   ██╗███████╗\n'
     printf '╚══██╔══╝██╔══██╗██║   ██║██╔════╝\n'
@@ -140,7 +147,6 @@ render_md(){
     printf '   ██║   ██║  ██║╚██████╔╝██║\n'
     printf '   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝\n'
     printf '```\n\n`agent onboarding  ·  node → wallet → first trade`\n\n'
-    : > "$ROOT/.tn-banner"
   fi
   printf '### TRUF.NETWORK onboarding\n\n'
   printf '%s\n\n' "$bar"
@@ -168,7 +174,7 @@ render_md(){
     1) if printf '%s' "$out" | grep -q 'kwild requires 16'; then
          printf '> ### ⏸ Waiting on you\n> Install the Postgres 16 client. It needs sudo, so it is yours to run.\n> \n> ```\n> sudo apt-get install -y postgresql-client-16\n> ```\n> \n> kwild refuses to start on any other major version. If 16 is not available,\n> the PGDG steps are in `skills/truf-node-up/SKILL.md` section 2.\n'
        else
-         printf '> ### ⚙️ Working\n> %s\n' "$next"
+         printf '> ### %s\n> %s\n' "$wk" "$next"
        fi ;;
     4) v(){ printf '%s' "$out" | sed -n "s/^$1=//p"; }
        stage=$(v SYNC_STAGE); now=$(date +%s); st=$(v SYNC_START)
@@ -266,15 +272,18 @@ render_md(){
        fi ;;
     6) printf '> ### ⏸ Waiting on you\n> **1.** Approve the agent rule in your wallet.\n> **2.** Send the funds. $5 is plenty to start.\n> \n> ⚠️ **Before sending, compare the agent address the site shows against the one\n> I derived, character by character.** That is the only step that loses money.\n> \n> Walkthrough written for you: `skills/truf-agent-wallet/owner-walkthrough.md`\n' ;;
     7) printf '> ### ✅ Ready\n> Node synced, wallet funded.\n> \n> ```\n> psql -f sql/market-scan.sql   # pick a market\n> scripts/edge.py <book>        # should I bet, and how much\n> ```\n' ;;
-    *) printf '> ### ⚙️ Working\n> %s\n' "$next" ;;
+    *) printf '> ### %s\n> %s\n' "$wk" "$next" ;;
   esac
+  if [ "$pending" = 1 ] && [ "$phase" -lt 6 ] && ! printf '%s' "$out" | grep -q 'kwild requires 16'; then
+    printf '\n**Reply "go" and I will start this step.**\n'
+  fi
 }
 
 # --line prints ONE compact line: the routine refresh. Use the full --md block
 # only at a stage or phase change, otherwise the display is all noise.
 render_line(){
   local out phase stage v now st el
-  out="$("$ROOT/scripts/status.sh" 2>/dev/null)"
+  out="$(TN_PEEK=1 "$ROOT/scripts/status.sh" 2>/dev/null)"
   v(){ printf '%s' "$out" | sed -n "s/^$1=//p"; }
   phase=$(printf '%s' "$out" | sed -n 's/^PHASE \([0-9]*\) of.*/\1/p'); phase=${phase:-1}
   stage=$(v SYNC_STAGE); now=$(date +%s); st=$(v SYNC_START)

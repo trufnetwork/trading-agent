@@ -253,7 +253,17 @@ fi
 echo
 if [ -z "$NEXT" ]; then PHASE=7; NEXT="READY. Pick a market: psql -f sql/market-scan.sql, then scripts/edge.py <book>"; fi
 echo "PHASE $PHASE of 7"
-echo "NEXT: $NEXT"
-# An agent reads this output every phase, so this is the one place a display
-# instruction cannot be skimmed past. Tool output is not shown to the person.
-echo "SHOW: before acting on NEXT, run scripts/onboard.sh --md and paste its whole output into your reply to the person"
+# The gate. Two tested runs read a "paste this into your reply" instruction,
+# ran the display command, and still showed the person nothing until the turn
+# ended, because only the final message of a turn reliably reaches them. So a
+# new phase withholds NEXT until the agent has ended a turn on the display.
+SHOWN=$(cat "$ROOT/.tn-shown" 2>/dev/null || true)
+if [ "${1:-}" = "--go" ]; then echo "$PHASE" > "$ROOT/.tn-shown"; SHOWN=$PHASE; fi
+if [ "$SHOWN" = "$PHASE" ] || [ -n "${TN_PEEK:-}" ]; then
+  echo "NEXT: $NEXT"
+else
+  echo "STOP: phase $PHASE has not been shown to the person. Do not act yet."
+  echo "STOP: 1. run scripts/onboard.sh --md"
+  echo "STOP: 2. END YOUR TURN with that output, verbatim, as your final message. Text written between tool calls does not count, the person may never see it."
+  echo "STOP: 3. after the person replies, run scripts/status.sh --go to get the next action"
+fi

@@ -31,12 +31,16 @@ real run.
 **What you see.** You are making progress, and the person asks what is
 happening, or stops the run.
 
-**What it means.** They cannot see your tool calls. Running the status script
-shows *you* the state. It shows them nothing.
+**What it means.** They see only the final message of your turn. Tool output is
+hidden, and text written between tool calls is often hidden too. Pasting the
+block mid-turn and carrying on shows them nothing.
 
-**What to do.** Run `scripts/onboard.sh --md` and paste its whole output into
-your own reply, at every phase. This happened on the first outside test of this
-runbook: three phases completed in silence, and the person halted it.
+**What to do.** Stop now. Run `scripts/onboard.sh --md` and end your turn with
+its whole output as your final message. Continue with `scripts/status.sh --go`
+only after they reply.
+
+This happened on both outside tests of this runbook. The second agent believed
+it had pasted the block three times, and none of it reached the person.
 
 ## The socket path is too long
 

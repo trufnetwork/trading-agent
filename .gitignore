@@ -20,4 +20,4 @@ streams-cache.json
 *.log
 *.log.*
 streams.json
-.tn-banner
+.tn-shown
