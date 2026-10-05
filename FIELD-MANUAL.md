@@ -31,16 +31,16 @@ real run.
 **What you see.** You are making progress, and the person asks what is
 happening, or stops the run.
 
-**What it means.** They see only the final message of your turn. Tool output is
-hidden, and text written between tool calls is often hidden too. Pasting the
-block mid-turn and carrying on shows them nothing.
+**What it means.** They cannot see your tool calls. Running the display command
+shows the block to you. It reaches them only when you write it as text in your
+message.
 
-**What to do.** Stop now. Run `scripts/onboard.sh --md` and end your turn with
-its whole output as your final message. Continue with `scripts/status.sh --go`
-only after they reply.
+**What to do.** Run `scripts/onboard.sh --md` and write its whole output into
+your message now, before any other tool call. Then carry on. Do this at the
+start of every phase, not at the end of the turn.
 
-This happened on both outside tests of this runbook. The second agent believed
-it had pasted the block three times, and none of it reached the person.
+This happened on both outside tests of this runbook. Each agent ran the display
+command at every phase and wrote nothing into the chat until the person asked.
 
 ## The socket path is too long
 

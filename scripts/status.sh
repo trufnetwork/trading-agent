@@ -253,17 +253,24 @@ fi
 echo
 if [ -z "$NEXT" ]; then PHASE=7; NEXT="READY. Pick a market: psql -f sql/market-scan.sql, then scripts/edge.py <book>"; fi
 echo "PHASE $PHASE of 7"
-# The gate. Two tested runs read a "paste this into your reply" instruction,
-# ran the display command, and still showed the person nothing until the turn
-# ended, because only the final message of a turn reliably reaches them. So a
-# new phase withholds NEXT until the agent has ended a turn on the display.
+# The gate. Two tested runs ran the display command at every phase and never
+# wrote its output into the chat, so the person watched nothing happen. A new
+# phase therefore withholds NEXT until the agent returns the code that
+# onboard.sh --md prints. That forces a break between two tool calls, which is
+# where the block gets written as message text.
 SHOWN=$(cat "$ROOT/.tn-shown" 2>/dev/null || true)
-if [ "${1:-}" = "--go" ]; then echo "$PHASE" > "$ROOT/.tn-shown"; SHOWN=$PHASE; fi
+if [ "${1:-}" = "--shown" ]; then
+  if [ -n "${2:-}" ] && [ "${2:-}" = "$(cat "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
+    echo "$PHASE" > "$ROOT/.tn-shown"; SHOWN=$PHASE
+  else
+    echo "STOP: wrong or missing code. Run scripts/onboard.sh --md and use the code it prints."
+  fi
+fi
 if [ "$SHOWN" = "$PHASE" ] || [ -n "${TN_PEEK:-}" ]; then
   echo "NEXT: $NEXT"
 else
   echo "STOP: phase $PHASE has not been shown to the person. Do not act yet."
-  echo "STOP: 1. run scripts/onboard.sh --md"
-  echo "STOP: 2. END YOUR TURN with that output, verbatim, as your final message. Text written between tool calls does not count, the person may never see it."
-  echo "STOP: 3. after the person replies, run scripts/status.sh --go to get the next action"
+  echo "STOP: 1. run scripts/onboard.sh --md, on its own"
+  echo "STOP: 2. write its whole output as text in your message, right now, before any other tool call. Do not end your turn and do not save it for a summary."
+  echo "STOP: 3. run scripts/status.sh --shown <code>, with the code from step 1, to get the next action"
 fi

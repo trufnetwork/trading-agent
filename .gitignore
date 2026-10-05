@@ -21,3 +21,4 @@ streams-cache.json
 *.log.*
 streams.json
 .tn-shown
+.tn-code

@@ -132,11 +132,13 @@ render_md(){
   local pending=0
   [ "$(cat "$ROOT/.tn-shown" 2>/dev/null || true)" = "$phase" ] || pending=1
   if [ "$pending" = 1 ]; then
-    printf '<!-- agent: END YOUR TURN NOW with this whole block, verbatim, as your final message. Tool output and text written between tool calls are not shown to the person. After they reply, run scripts/status.sh --go. -->\n\n'
+    local code; code=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \n')
+    echo "$code" > "$ROOT/.tn-code"
+    printf '<!-- agent: WRITE this whole block NOW as text in your message, verbatim, before any other tool call. Do not end your turn. Tool output is not shown to the person, your message text is. Then run: scripts/status.sh --shown %s -->\n\n' "$code"
   else
-    printf '<!-- agent: put this whole block, verbatim, in the final message of your turn. Tool output and text written between tool calls are not shown to the person. -->\n\n'
+    printf '<!-- agent: write this whole block as text in your message, verbatim, before any other tool call. Tool output is not shown to the person. -->\n\n'
   fi
-  local wk='⚙️ Working'; [ "$pending" = 1 ] && wk='▶️ Up next'
+  local wk='⚙️ Working'
   # The banner rides along until the person has seen a first block and replied.
   if [ ! -f "$ROOT/.tn-shown" ] || [ "${2:-}" = "--banner" ]; then
     printf '```\n'
@@ -274,9 +276,6 @@ render_md(){
     7) printf '> ### ✅ Ready\n> Node synced, wallet funded.\n> \n> ```\n> psql -f sql/market-scan.sql   # pick a market\n> scripts/edge.py <book>        # should I bet, and how much\n> ```\n' ;;
     *) printf '> ### %s\n> %s\n' "$wk" "$next" ;;
   esac
-  if [ "$pending" = 1 ] && [ "$phase" -lt 6 ] && ! printf '%s' "$out" | grep -q 'kwild requires 16'; then
-    printf '\n**Reply "go" and I will start this step.**\n'
-  fi
 }
 
 # --line prints ONE compact line: the routine refresh. Use the full --md block
