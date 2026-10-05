@@ -151,6 +151,14 @@ render_md(){
     printf '```\n\n`agent onboarding  ·  node → wallet → first trade`\n\n'
   fi
   printf '### TRUF.NETWORK onboarding\n\n'
+  # One block marks both events: the phase that just finished and the one starting.
+  local prev; prev=$(cat "$ROOT/.tn-shown" 2>/dev/null || true)
+  if [ "$pending" = 1 ] && [ -n "$prev" ] && [ "$prev" -lt "$phase" ] 2>/dev/null; then
+    for i in $(seq "$prev" $((phase-1))); do
+      printf '✅ **Phase %s complete** · %s\n\n' "$i" "${NAMES[$((i-1))]}"
+    done
+    printf '▶️ **Starting phase %s** · %s\n\n' "$phase" "${NAMES[$((phase-1))]}"
+  fi
   printf '%s\n\n' "$bar"
   printf '**Phase %s of 7** — %s\n\n' "$phase" "${NAMES[$((phase-1))]}"
   printf '| | Phase | Detail |\n|:-:|---|---|\n'
