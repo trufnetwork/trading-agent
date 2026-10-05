@@ -282,14 +282,3 @@ on the machine. This deployment deliberately shifts:
 | Postgres | 5433 |
 | Node RPC | 127.0.0.1:8485 |
 | P2P | 0.0.0.0:6601 |
-
-## Status
-
-- [x] 1. Prerequisites — kwild 2.5.8, PG16 client
-- [x] 2. Postgres + node running on mainnet `tn-v2.1`
-- [x] 3. State sync — at chain tip. Replay took 9h15m, see [findings-blocksync-latency.md](protocol/findings-blocksync-latency.md)
-- [x] 4. Direct read of live markets (167 live, 1,189 open orders, bucket ladders confirmed)
-- [~] 5. Agent wallet + funding — design verified against mainnet, not executed
-- [x] 6. SDK write — 9 YES @ 38c on order book 1176, filled block 2616043
-- [x] 7. Custom indexing DB — running on 5434, capturing prints, order events, book snapshots
-- [ ] 8. Package as skills
