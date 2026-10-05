@@ -59,16 +59,22 @@ render(){
   echo
 
   case $phase in
-    1) top "WAITING ON YOU"
-       row "Install the Postgres 16 client. It needs sudo, so it is"
-       row "yours to run, not mine."
-       row ""
-       row "  ${C}sudo apt-get install -y postgresql-client-16${R}"
-       row ""
-       row "kwild refuses to start on any other major version."
-       row "Full instructions, including the PGDG repo if 16 is not"
-       row "available: skills/truf-node-up/SKILL.md section 2"
-       bot ;;
+    1) if printf '%s' "$out" | grep -q 'kwild requires 16'; then
+         top "WAITING ON YOU"
+         row "Install the Postgres 16 client. It needs sudo, so it is"
+         row "yours to run, not mine."
+         row ""
+         row "  ${C}sudo apt-get install -y postgresql-client-16${R}"
+         row ""
+         row "kwild refuses to start on any other major version."
+         row "Full instructions, including the PGDG repo if 16 is not"
+         row "available: skills/truf-node-up/SKILL.md section 2"
+         bot
+       else
+         top "WORKING"
+         printf '%s│%s %s %s│%s\n' "$D" "$R" "$(pad "${next:0:58}")" "$D" "$R"
+         bot
+       fi ;;
     4) top "LONG WAIT"
        row "Syncing from a snapshot, then replaying every block since."
        row ""
@@ -122,6 +128,20 @@ render_md(){
     else bar="$bar⬜"; fi
   done
 
+  # Addressed to the agent. An HTML comment, so it vanishes when rendered.
+  printf '<!-- agent: paste this whole block into your reply to the person, verbatim. Output inside a tool call is not shown to them. -->\n\n'
+  # The banner rides along on the first run, so nobody has to copy it by hand.
+  if [ ! -f "$ROOT/.tn-banner" ] || [ "${2:-}" = "--banner" ]; then
+    printf '```\n'
+    printf '████████╗██████╗ ██╗   ██╗███████╗\n'
+    printf '╚══██╔══╝██╔══██╗██║   ██║██╔════╝\n'
+    printf '   ██║   ██████╔╝██║   ██║█████╗\n'
+    printf '   ██║   ██╔══██╗██║   ██║██╔══╝\n'
+    printf '   ██║   ██║  ██║╚██████╔╝██║\n'
+    printf '   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝\n'
+    printf '```\n\n`agent onboarding  ·  node → wallet → first trade`\n\n'
+    : > "$ROOT/.tn-banner"
+  fi
   printf '### TRUF.NETWORK onboarding\n\n'
   printf '%s\n\n' "$bar"
   printf '**Phase %s of 7** — %s\n\n' "$phase" "${NAMES[$((phase-1))]}"
@@ -145,7 +165,11 @@ render_md(){
   done
   echo
   case $phase in
-    1) printf '> ### ⏸ Waiting on you\n> Install the Postgres 16 client. It needs sudo, so it is yours to run.\n> \n> ```\n> sudo apt-get install -y postgresql-client-16\n> ```\n> \n> kwild refuses to start on any other major version. If 16 is not available,\n> the PGDG steps are in `skills/truf-node-up/SKILL.md` section 2.\n' ;;
+    1) if printf '%s' "$out" | grep -q 'kwild requires 16'; then
+         printf '> ### ⏸ Waiting on you\n> Install the Postgres 16 client. It needs sudo, so it is yours to run.\n> \n> ```\n> sudo apt-get install -y postgresql-client-16\n> ```\n> \n> kwild refuses to start on any other major version. If 16 is not available,\n> the PGDG steps are in `skills/truf-node-up/SKILL.md` section 2.\n'
+       else
+         printf '> ### ⚙️ Working\n> %s\n' "$next"
+       fi ;;
     4) v(){ printf '%s' "$out" | sed -n "s/^$1=//p"; }
        stage=$(v SYNC_STAGE); now=$(date +%s); st=$(v SYNC_START)
        el=""
@@ -304,7 +328,7 @@ render_line(){
 
 if [ "${1:-}" = "--line" ]; then render_line; exit 0; fi
 
-if [ "${1:-}" = "--md" ]; then render_md; exit 0; fi
+if [ "${1:-}" = "--md" ]; then render_md "$@"; exit 0; fi
 if [ "${1:-}" = "--watch" ]; then
   render; last=$(cat "$ROOT/.tn-phase" 2>/dev/null)
   while sleep 20; do

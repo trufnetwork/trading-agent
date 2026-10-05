@@ -196,12 +196,16 @@ node. **The two together publish an unauthenticated RPC to the network**, so the
 RPC must be bound to loopback.
 
 The admin socket also defaults to `/tmp/kwild.socket`, which collides with any
-other Kwil node on the machine for the same reason the ports do.
+other Kwil node on the machine for the same reason the ports do. `ports.sh`
+records a safe path as `TN_ADMIN_SOCKET`. It sits inside the node root when that
+fits, and falls back to a short `/tmp` path in a deep checkout, because a Unix
+socket path is limited to about 107 characters.
 
 ```bash
 RPCPORT=$(grep TN_RPC_PORT .tn-env | cut -d= -f2)
 sed -i "s|^listen = '0.0.0.0:$RPCPORT'|listen = '127.0.0.1:$RPCPORT'|" tn-node/config.toml
-sed -i "s|^listen = '/tmp/kwild.socket'|listen = '$(pwd)/tn-node/admin.socket'|" tn-node/config.toml
+SOCK=$(grep TN_ADMIN_SOCKET .tn-env | cut -d= -f2)
+sed -i "s|^listen = '/tmp/kwild.socket'|listen = '$SOCK'|" tn-node/config.toml
 grep -nE "^ *(port|listen) *=" tn-node/config.toml     # verify
 ```
 

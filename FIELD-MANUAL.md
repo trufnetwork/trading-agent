@@ -8,6 +8,8 @@ real run.
 
 | What you see | Go to |
 |--------------|-------|
+| The person says they see no progress | [The person sees nothing](#the-person-sees-nothing) |
+| kwild fails to bind its admin socket | [The socket path is too long](#the-socket-path-is-too-long) |
 | Node exits with `snapshot file not provided` | [Sync never starts](#sync-never-starts) |
 | Status reports a phase you already finished | [Status disagrees with reality](#status-disagrees-with-reality) |
 | The RPC stops answering mid-sync | [The RPC goes quiet](#the-rpc-goes-quiet) |
@@ -23,6 +25,35 @@ real run.
 | A stream's prints changed shape | [A publisher changed its schedule](#a-publisher-changed-its-schedule) |
 
 ---
+
+## The person sees nothing
+
+**What you see.** You are making progress, and the person asks what is
+happening, or stops the run.
+
+**What it means.** They cannot see your tool calls. Running the status script
+shows *you* the state. It shows them nothing.
+
+**What to do.** Run `scripts/onboard.sh --md` and paste its whole output into
+your own reply, at every phase. This happened on the first outside test of this
+runbook: three phases completed in silence, and the person halted it.
+
+## The socket path is too long
+
+**What you see.** kwild fails at startup binding its admin socket, or the
+socket file never appears.
+
+**What it means.** A Unix socket path is limited to about 107 characters. A
+socket inside the node root exceeds that when the checkout itself is deep.
+
+**Confirm it.**
+
+```bash
+grep -A4 '^\[admin\]' tn-node/config.toml | grep listen | awk -F"'" '{print length($2)}'
+```
+
+**What to do.** Use the `TN_ADMIN_SOCKET` value from `.tn-env`. `scripts/ports.sh`
+already falls back to a short `/tmp` path when the in-root one would not fit.
 
 ## Sync never starts
 

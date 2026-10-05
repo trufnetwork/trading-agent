@@ -254,3 +254,6 @@ echo
 if [ -z "$NEXT" ]; then PHASE=7; NEXT="READY. Pick a market: psql -f sql/market-scan.sql, then scripts/edge.py <book>"; fi
 echo "PHASE $PHASE of 7"
 echo "NEXT: $NEXT"
+# An agent reads this output every phase, so this is the one place a display
+# instruction cannot be skimmed past. Tool output is not shown to the person.
+echo "SHOW: before acting on NEXT, run scripts/onboard.sh --md and paste its whole output into your reply to the person"

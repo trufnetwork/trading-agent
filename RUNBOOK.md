@@ -3,63 +3,39 @@
 Follow this in order. It takes you from a bare machine to a placed trade on
 TRUF.NETWORK mainnet, using real money.
 
-**You do not need to read this whole file.** Run the status script, do what it
-says, run it again.
+**The loop is three steps, and the middle one is not optional.**
 
-If a check fails, go to [FIELD-MANUAL.md](FIELD-MANUAL.md) and look up the
-symptom rather than guessing at the cause.
+1. **Status.** Run `scripts/status.sh`. It prints `PHASE n of 7`, one `NEXT:`
+   action, and a `SHOW:` reminder.
+2. **Show.** Run `scripts/onboard.sh --md` and paste its whole output into your
+   reply. Do this before acting.
+3. **Act.** Do the `NEXT:` action, then go back to step 1.
 
-```bash
-scripts/onboard.sh          # the session view, for a human watching
-scripts/onboard.sh --watch  # refresh until the phase changes
-scripts/status.sh           # the raw checks, for an agent parsing
-```
+`status.sh` is safe to run at any time and works on a bare clone. **If you are
+resuming a session, start with it.** If a check fails, go to
+[FIELD-MANUAL.md](FIELD-MANUAL.md) and look up the symptom rather than guessing
+at the cause.
 
-`status.sh` reports `PHASE n of 7` and one `NEXT:` action, and `onboard.sh`
-renders it. Detection lives in one place, so the two cannot disagree. It is safe to run at any time
-and it works on a bare clone. **If you are resuming a session, run it first.**
+## Show progress in your reply (MANDATORY)
 
-## Progress tracking (MANDATORY)
+**The person cannot see your tool calls.** Output from a command you run is
+collapsed or hidden in their view. If the status block only ever appears inside
+a tool result, they are watching a blank screen while you work.
 
-Before doing anything else, call `TodoWrite` with these seven todos, all
-`pending`. Claude Code renders them as a live checklist, which is the only
-progress display the person actually sees. Output written inside a tool call is
-not shown to them.
+So the block has to be in your own message. `scripts/onboard.sh --md` prints
+exactly what to paste: a banner on the first run, a progress bar, the phase
+table, and a panel saying what is happening or what the person needs to do.
 
-1. `Phase 1: Tools`
-2. `Phase 2: Postgres`
-3. `Phase 3: Node config`
-4. `Phase 4: Sync to tip`
-5. `Phase 5: SDK helper`
-6. `Phase 6: Wallet (needs the owner)`
-7. `Phase 7: First trade`
+Paste it when you start, at every phase change, and whenever you hand back to
+the person. Once per reply is enough. Paste it verbatim, because the panel text
+for the human steps was written for the person and should reach them unedited.
 
-Transitions, updated the moment a phase starts or ends, never batched at the
-end. Exactly one todo is `in_progress` at any time.
+A first run of this runbook that was tested did all of phases 1 to 3 without
+showing anything, and the person stopped it. Do not be that run.
 
-If your runtime has no `TodoWrite`, skip it and rely on the status block below.
-
-## Showing progress in your reply
-
-**Print the status block in your own message, not inside a tool call.** Generate
-it with `scripts/onboard.sh --md` and paste the result. It renders as a table
-with a progress bar, and it is how the person follows along.
-
-Print it when you start, at every phase transition, and whenever you hand back
-to the person. Do not print it more than once per reply.
-
-At the start of a run, print this banner first:
-
-```
-████████╗██████╗ ██╗   ██╗███████╗
-╚══██╔══╝██╔══██╗██║   ██║██╔════╝
-   ██║   ██████╔╝██║   ██║█████╗
-   ██║   ██╔══██╗██║   ██║██╔══╝
-   ██║   ██║  ██║╚██████╔╝██║
-   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝
-```
-
-`agent onboarding  ·  node → wallet → first trade`
+If your runtime has a todo or task-list tool, mirror the seven phases there as
+well, with exactly one in progress at a time. That is a bonus on top of the
+pasted block, never a substitute for it.
 
 ## Rules for the agent following this
 
@@ -126,6 +102,8 @@ The commands are in section 2 of that skill. Hand them over and wait.
 
 **Check:** `psql --version` and `pg_dump --version` both report 16.x.
 
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+
 ## Phase 2. Postgres
 
 ```bash
@@ -153,12 +131,11 @@ done
 
 **Check:** `scripts/status.sh` reports postgres reachable.
 
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+
 Confirm the database that answered is **yours**. Another Kwil node's Postgres
 answers a connection and returns plausible data from a different chain. See
 [FIELD-MANUAL.md](FIELD-MANUAL.md) under **You are reading the wrong node**.
-
-Confirm the database that answered is **yours**. Another Kwil node's Postgres
-will answer a connection and return plausible data from a different chain.
 
 ## Phase 3. Node config
 
@@ -178,6 +155,8 @@ which is **mainnet**. The full command is in section 5 of the node skill.
 anything else you have initialised a private network that will sync instantly
 and contain nothing.
 
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+
 ### Then fix two insecure defaults. This is not optional.
 
 `kwild setup init` writes `listen = '0.0.0.0:8484'` for the RPC, and this
@@ -185,13 +164,19 @@ protocol deliberately does not pass `--rpc.private`. **Left alone, that
 publishes an unauthenticated RPC to the network.** Bind it to loopback.
 
 It also puts the admin socket at `/tmp/kwild.socket`, which collides with any
-other Kwil node on the machine for the same reason the ports do.
+other Kwil node on the machine for the same reason the ports do. Use the path
+`scripts/ports.sh` recorded as `TN_ADMIN_SOCKET`.
+
+That path is inside the node root when it fits. A Unix socket path is limited
+to about 107 characters, so in a deep checkout `ports.sh` picks a short `/tmp`
+path keyed to this checkout instead, and kwild can still bind it.
 
 ```bash
 cd "$TN_HOME"
 RPCPORT=$(grep TN_RPC_PORT .tn-env | cut -d= -f2)
 sed -i "s|^listen = '0.0.0.0:$RPCPORT'|listen = '127.0.0.1:$RPCPORT'|" tn-node/config.toml
-sed -i "s|^listen = '/tmp/kwild.socket'|listen = '$TN_HOME/tn-node/admin.socket'|" tn-node/config.toml
+SOCK=$(grep TN_ADMIN_SOCKET .tn-env | cut -d= -f2)
+sed -i "s|^listen = '/tmp/kwild.socket'|listen = '$SOCK'|" tn-node/config.toml
 grep -nE "^ *(port|listen) *=" tn-node/config.toml
 ```
 
@@ -241,6 +226,8 @@ log, so check its output rather than the RPC directly.
 
 **Check:** `scripts/status.sh` reports `at tip`.
 
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+
 If it never starts, or the estimate swings wildly, see
 [FIELD-MANUAL.md](FIELD-MANUAL.md) under **Sync never starts** and **Sync speed
 swings wildly**. Do not restart in a loop, and do not trust a raw port test.
@@ -257,6 +244,8 @@ analysis scripts need this binary. `keygen` writes `agent/agent.key` at mode
 0600.
 
 **Check:** `scripts/status.sh` shows the binary built and the key present.
+
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
 
 ## Phase 6. Wallet — **HUMAN**
 
@@ -287,6 +276,8 @@ echo "TN_MAA=0x..." >> .tn-env
 
 **Check:** `scripts/status.sh` reports a USDC balance.
 
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
+
 ## Phase 7. Trade
 
 Read [skills/truf-market-read/SKILL.md](skills/truf-market-read/SKILL.md)
@@ -309,6 +300,8 @@ scripts/portfolio.py <maa>
 
 **Check:** the position appears in `portfolio.py`, marked at the best
 other-party bid.
+
+**Show:** paste the output of `scripts/onboard.sh --md` into your reply.
 
 Before trusting any number you derived yourself, read **Right data, wrong
 meaning** in [FIELD-MANUAL.md](FIELD-MANUAL.md). It is the failure that costs

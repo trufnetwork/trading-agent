@@ -19,10 +19,20 @@ pick(){ local p=$1; while in_use "$p"; do p=$((p+1)); done; printf '%s' "$p"; }
 
 if [ "${1:-}" = "--force" ]; then rm -f "$ENVF"; fi
 
+# A Unix socket path is limited to about 107 characters. The natural home for
+# the admin socket is inside the node root, but a deep checkout pushes that
+# past the limit and kwild then fails to bind. Fall back to a short /tmp path
+# keyed to this checkout, so two deployments still cannot collide.
+SOCK="$ROOT/tn-node/admin.socket"
+if [ ${#SOCK} -gt 100 ]; then
+  SOCK="/tmp/tn-admin-$(printf '%s' "$ROOT" | cksum | cut -d' ' -f1).sock"
+fi
+
 CFG="$ROOT/tn-node/config.toml"
 
 if [ -f "$ENVF" ]; then
   echo "using existing $ENVF"
+  grep -q '^TN_ADMIN_SOCKET=' "$ENVF" || echo "TN_ADMIN_SOCKET=$SOCK" >> "$ENVF"
 elif [ -f "$CFG" ]; then
   # A node is already configured. Adopt ITS ports, never re-pick, or a later
   # session would talk to a different database than the one the node writes.
@@ -34,6 +44,7 @@ elif [ -f "$CFG" ]; then
     echo "TN_PGPORT=${PG:-5432}"
     echo "TN_RPC_PORT=${RPC:-8484}"
     echo "TN_P2P_PORT=${P2P:-6600}"
+    echo "TN_ADMIN_SOCKET=$SOCK"
   } > "$ENVF"
   echo "  adopted ports from an existing node config"
 else
@@ -43,6 +54,7 @@ else
     echo "TN_PGPORT=$PG"
     echo "TN_RPC_PORT=$RPC"
     echo "TN_P2P_PORT=$P2P"
+    echo "TN_ADMIN_SOCKET=$SOCK"
   } > "$ENVF"
   for pair in "5432:$PG:postgres" "8484:$RPC:rpc" "6600:$P2P:p2p"; do
     d=${pair%%:*}; rest=${pair#*:}; got=${rest%%:*}; name=${rest##*:}

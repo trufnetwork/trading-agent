@@ -21,10 +21,9 @@ scripts/status.sh         # PHASE n of 7, and the single next action
 scripts/onboard.sh --md   # the same thing as markdown, to paste into your reply
 ```
 
-**Show progress where the person can see it.** Track the seven phases with
-`TodoWrite` if your runtime has it, and print the `--md` status block in your
-own message at every phase transition. Output written inside a tool call is not
-displayed to them.
+**Show progress where the person can see it.** They cannot see your tool calls.
+At every phase, run `scripts/onboard.sh --md` and paste its whole output into
+your own reply. `status.sh` reminds you with a `SHOW:` line each time.
 
 Three phases need a human: installing the Postgres 16 client, approving the
 agent wallet, and funding it. Stop and ask rather than trying to work around
