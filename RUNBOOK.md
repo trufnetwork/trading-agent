@@ -6,11 +6,15 @@ TRUF.NETWORK mainnet, using real money.
 **The loop is three steps. The person never has to tell you to continue.**
 
 1. **Status.** Run `scripts/status.sh`. It prints `PHASE n of 7`. On a phase the
-   person has not seen yet, it prints `STOP:` lines and no next action.
-2. **Show.** Run `scripts/onboard.sh --md`. Start a background wake-up timer,
-   then end your turn with the whole block as your final message.
+   person has not seen yet, it prints `STOP:` lines and the block to show.
+2. **Show.** Start a background wake-up timer, then end your turn with the whole
+   block as your final message.
 3. **Act.** The timer wakes you. Run `scripts/status.sh --shown <code>` with the
-   code from step 2. It prints one `NEXT:` action. Do it, then go back to step 1.
+   code from the block. It prints one `NEXT:` action. Do it, then go back to
+   step 1.
+
+**Do the first status and show before anything else.** The person is watching a
+silent screen until the first block lands, so do not read ahead first.
 
 `status.sh` is safe to run at any time and works on a bare clone. **If you are
 resuming a session, start with it.** If a check fails, go to
@@ -45,8 +49,7 @@ the person saw nothing until the end. One agent was sure it had pasted the
 block three times. None of it arrived.
 
 **The check is real.** In Claude Code, `status.sh --shown` reads the session
-transcript and refuses unless the whole block is in a message you sent. Run
-`onboard.sh --md` as its own command, never chained with the check.
+transcript and refuses unless the whole block is in a message you sent.
 
 **If the person asks what is happening, they have not seen the block.** Do the
 hand-off at once.

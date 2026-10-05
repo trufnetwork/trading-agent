@@ -261,7 +261,7 @@ echo "PHASE $PHASE of 7"
 SHOWN=$(cat "$ROOT/.tn-shown" 2>/dev/null || true)
 if [ "${1:-}" = "--shown" ]; then
   if [ -z "${2:-}" ] || [ "${2:-}" != "$(cat "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
-    echo "STOP: wrong or missing code. Run scripts/onboard.sh --md and use the code it prints."
+    echo "STOP: wrong or missing code. Run scripts/status.sh and use the code in the block it prints."
   elif [ "$(python3 "$ROOT/scripts/shown-check.py" "$2" 2>/dev/null)" = "toolonly" ]; then
     echo "STOP: checked the session transcript. The block is NOT in a message the person received. It only appeared inside a tool result."
     echo "STOP: text written between tool calls is often dropped before it reaches them. Use the hand-off below. It is the only delivery that works."
@@ -273,9 +273,10 @@ if [ "$SHOWN" = "$PHASE" ] || [ -n "${TN_PEEK:-}" ]; then
   echo "NEXT: $NEXT"
 else
   echo "STOP: phase $PHASE has not been shown to the person. Do not act yet."
-  echo "STOP: 1. run scripts/onboard.sh --md, as its own command"
-  echo "STOP: 2. start a wake-up timer as a BACKGROUND command: sleep 3"
-  echo "STOP: 3. END YOUR TURN. Your final message is the whole block from step 1, verbatim, and nothing else. A final message always reaches the person. Text between tool calls often does not."
-  echo "STOP: 4. the timer wakes you by itself, so the person does not need to reply. Then run scripts/status.sh --shown <code> to get the next action."
-  echo "STOP: no background commands in your runtime? Do steps 1 and 3, and continue when the person replies."
+  echo "STOP: 1. start a wake-up timer as a BACKGROUND command: sleep 3"
+  echo "STOP: 2. END YOUR TURN. Your final message is the whole block printed below, verbatim, and nothing else. A final message always reaches the person. Text between tool calls often does not."
+  echo "STOP: 3. the timer wakes you by itself, so the person does not need to reply. Then run scripts/status.sh --shown <code> to get the next action."
+  echo "STOP: no background commands in your runtime? Do step 2, and continue when the person replies."
+  echo
+  "$ROOT/scripts/onboard.sh" --md
 fi
