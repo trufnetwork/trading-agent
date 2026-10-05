@@ -29,10 +29,6 @@ into your message the moment a phase starts, before you do the work. Do not
 save it for the end of the turn, and do not end the turn to show it. The person
 should watch the phases tick over while you keep working.
 
-The block for a new phase opens by marking the previous phase complete, so one
-block covers both the finish and the start. No reply from the person is needed
-between phases.
-
 `scripts/onboard.sh --md` prints exactly what to write: a banner at the start, a
 progress bar, the phase table, and a panel saying what is happening. Write it
 verbatim, because the panel text was written for the person.
