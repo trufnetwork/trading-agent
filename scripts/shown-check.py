@@ -38,6 +38,13 @@ def scan():
             for b in content:
                 if b.get("type") == "text" and d.get("type") == "assistant" and needle in b.get("text", "") and "| Phase | Detail |" in b.get("text", ""):
                     return "text"
+                # Some runtimes deliver a turn's final message through a hand-back
+                # or messaging tool. A shell command that echoes the block is not that.
+                if b.get("type") == "tool_use" and d.get("type") == "assistant" \
+                        and b.get("name") not in ("Bash", "Read", "Write", "Edit"):
+                    sent = json.dumps(b.get("input"), ensure_ascii=False)
+                    if needle in sent and "| Phase | Detail |" in sent:
+                        return "text"
                 if b.get("type") == "tool_result" and code in json.dumps(b):
                     seen_tool = True
     return "toolonly" if seen_tool else "unknown"
