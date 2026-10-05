@@ -39,8 +39,9 @@ message.
 your message now, before any other tool call. Then carry on. Do this at the
 start of every phase, not at the end of the turn.
 
-This happened on both outside tests of this runbook. Each agent ran the display
-command at every phase and wrote nothing into the chat until the person asked.
+This happened on three outside tests of this runbook. Each agent ran the display
+command at every phase and wrote nothing into the chat. `status.sh --shown` now
+checks the Claude Code transcript and refuses until the block is really there.
 
 ## The socket path is too long
 

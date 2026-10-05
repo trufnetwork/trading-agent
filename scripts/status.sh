@@ -260,10 +260,14 @@ echo "PHASE $PHASE of 7"
 # where the block gets written as message text.
 SHOWN=$(cat "$ROOT/.tn-shown" 2>/dev/null || true)
 if [ "${1:-}" = "--shown" ]; then
-  if [ -n "${2:-}" ] && [ "${2:-}" = "$(cat "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
-    echo "$PHASE" > "$ROOT/.tn-shown"; SHOWN=$PHASE
-  else
+  if [ -z "${2:-}" ] || [ "${2:-}" != "$(cat "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
     echo "STOP: wrong or missing code. Run scripts/onboard.sh --md and use the code it prints."
+  elif [ "$(python3 "$ROOT/scripts/shown-check.py" "$2" 2>/dev/null)" = "toolonly" ]; then
+    echo "STOP: checked the session transcript. The block is NOT in your message text. It only appeared inside a tool result, which the person cannot see."
+    echo "STOP: run scripts/onboard.sh --md as its own command, never chained with this one."
+    echo "STOP: reading the block or thinking about it does not show it. Write the whole block, including its last line, as plain text in your message now. Then run this command again."
+  else
+    echo "$PHASE" > "$ROOT/.tn-shown"; SHOWN=$PHASE
   fi
 fi
 if [ "$SHOWN" = "$PHASE" ] || [ -n "${TN_PEEK:-}" ]; then

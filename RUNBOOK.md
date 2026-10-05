@@ -33,9 +33,13 @@ should watch the phases tick over while you keep working.
 progress bar, the phase table, and a panel saying what is happening. Write it
 verbatim, because the panel text was written for the person.
 
-Two tested runs of this runbook ran the display command at every phase and
-never wrote the output into the chat. The person saw nothing until the end, both
-times. The code in step 2 exists because a written instruction was not enough.
+Three tested runs of this runbook ran the display command at every phase and
+never wrote the output into the chat. The third had the code and still skipped
+the writing. Reading the block, or thinking about it, shows the person nothing.
+
+**The check is real.** In Claude Code, `status.sh --shown` reads the session
+transcript and refuses unless the whole block is in your message text. Run
+`onboard.sh --md` as its own command, write the block, then run the check.
 
 **If the person asks what is happening, they have not seen the block.** Write it
 in your message at once, then carry on.

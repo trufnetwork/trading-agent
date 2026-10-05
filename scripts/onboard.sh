@@ -129,10 +129,10 @@ render_md(){
   done
 
   # Addressed to the agent. An HTML comment, so it vanishes when rendered.
-  local pending=0
+  local pending=0 code=
   [ "$(cat "$ROOT/.tn-shown" 2>/dev/null || true)" = "$phase" ] || pending=1
   if [ "$pending" = 1 ]; then
-    local code; code=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \n')
+    code=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \n')
     echo "$code" > "$ROOT/.tn-code"
     printf '<!-- agent: WRITE this whole block NOW as text in your message, verbatim, before any other tool call. Do not end your turn. Tool output is not shown to the person, your message text is. Then run: scripts/status.sh --shown %s -->\n\n' "$code"
   else
@@ -276,6 +276,8 @@ render_md(){
     7) printf '> ### ✅ Ready\n> Node synced, wallet funded.\n> \n> ```\n> psql -f sql/market-scan.sql   # pick a market\n> scripts/edge.py <book>        # should I bet, and how much\n> ```\n' ;;
     *) printf '> ### %s\n> %s\n' "$wk" "$next" ;;
   esac
+  # The stamp lets status.sh --shown confirm the block reached the chat.
+  [ "$pending" = 1 ] && printf '\n`updated %s · %s`\n' "$(date +%H:%M:%S)" "$code"
 }
 
 # --line prints ONE compact line: the routine refresh. Use the full --md block
