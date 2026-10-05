@@ -260,7 +260,7 @@ echo "PHASE $PHASE of 7"
 # where the block gets written as message text.
 SHOWN=$(cat "$ROOT/.tn-shown" 2>/dev/null || true)
 if [ "${1:-}" = "--shown" ]; then
-  if [ -z "${2:-}" ] || [ "${2:-}" != "$(cat "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
+  if [ -z "${2:-}" ] || [ "${2:-}" != "$(awk -v p="$PHASE" '$1==p{print $2}' "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
     echo "STOP: wrong or missing code. Run scripts/status.sh and use the code in the block it prints."
   elif [ "$(python3 "$ROOT/scripts/shown-check.py" "$2" 2>/dev/null)" = "toolonly" ]; then
     echo "STOP: checked the session transcript. The block is NOT in a message the person received. It only appeared inside a tool result."
@@ -272,11 +272,14 @@ fi
 if [ "$SHOWN" = "$PHASE" ] || [ -n "${TN_PEEK:-}" ]; then
   echo "NEXT: $NEXT"
 else
+  BLOCK=$("$ROOT/scripts/onboard.sh" --md)
+  CODE=$(awk -v p="$PHASE" '$1==p{print $2}' "$ROOT/.tn-code" 2>/dev/null || true)
   echo "STOP: phase $PHASE has not been shown to the person. Do not act yet."
   echo "STOP: 1. start a wake-up timer as a BACKGROUND command: sleep 3"
-  echo "STOP: 2. END YOUR TURN. Your final message is the whole block printed below, verbatim, and nothing else. A final message always reaches the person. Text between tool calls often does not."
-  echo "STOP: 3. the timer wakes you by itself, so the person does not need to reply. Then run scripts/status.sh --shown <code> to get the next action."
+  echo "STOP: 2. END YOUR TURN. Your final message is the whole block between the BLOCK lines below, verbatim, and nothing else. A final message always reaches the person. Text between tool calls often does not."
+  echo "STOP: 3. the timer wakes you by itself, so the person does not need to reply. Your first command then is: scripts/status.sh --shown $CODE"
   echo "STOP: no background commands in your runtime? Do step 2, and continue when the person replies."
-  echo
-  "$ROOT/scripts/onboard.sh" --md
+  echo "----- BLOCK START -----"
+  echo "$BLOCK"
+  echo "----- BLOCK END -----"
 fi

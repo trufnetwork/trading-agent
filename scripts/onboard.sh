@@ -132,11 +132,12 @@ render_md(){
   local pending=0 code=
   [ "$(cat "$ROOT/.tn-shown" 2>/dev/null || true)" = "$phase" ] || pending=1
   if [ "$pending" = 1 ]; then
-    code=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \n')
-    echo "$code" > "$ROOT/.tn-code"
-    printf '<!-- agent: start a background wake-up timer (sleep 3), then END YOUR TURN with this whole block, verbatim, as your final message. Text between tool calls often never reaches the person. The timer wakes you without them replying. Then run: scripts/status.sh --shown %s -->\n\n' "$code"
-  else
-    printf '<!-- agent: tool output is not shown to the person. To show this block, make it the final message of a turn. -->\n\n'
+    # One code per phase. Re-rendering must not invalidate a block already sent.
+    code=$(awk -v p="$phase" '$1==p{print $2}' "$ROOT/.tn-code" 2>/dev/null || true)
+    if [ -z "$code" ]; then
+      code=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \n')
+      echo "$phase $code" > "$ROOT/.tn-code"
+    fi
   fi
   local wk='⚙️ Working'
   # The banner rides along until the person has seen a first block and replied.

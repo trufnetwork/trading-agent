@@ -17,7 +17,7 @@ roots = [os.environ.get("CLAUDE_CONFIG_DIR", ""), os.path.expanduser("~/.claude"
 files = []
 for r in roots:
     if r:
-        files += glob.glob(os.path.join(r, "projects", "*", "*.jsonl"))
+        files += glob.glob(os.path.join(r, "projects", "**", "*.jsonl"), recursive=True)
 recent = [f for f in set(files) if time.time() - os.path.getmtime(f) < 900]
 
 def scan():
