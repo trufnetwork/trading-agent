@@ -11,6 +11,7 @@ real run.
 | The person says they see no progress | [The person sees nothing](#the-person-sees-nothing) |
 | kwild fails to bind its admin socket | [The socket path is too long](#the-socket-path-is-too-long) |
 | Node exits with `snapshot file not provided` | [Sync never starts](#sync-never-starts) |
+| The download stops partway, or the node exits mid-download | [The download stalls](#the-download-stalls) |
 | Status reports a phase you already finished | [Status disagrees with reality](#status-disagrees-with-reality) |
 | The RPC stops answering mid-sync | [The RPC goes quiet](#the-rpc-goes-quiet) |
 | Progress goes backwards, or a finished stage reappears | [Progress regressed](#progress-regressed) |
@@ -88,13 +89,61 @@ way through is libp2p's own logger.
 GOLOG_LOG_LEVEL="swarm2=debug,tcp-tpt=debug" kwild start --root ./tn-node
 ```
 
-**What to do.** Add another bootnode you trust, to both `bootnodes` and
-`trusted_providers`. Then wait rather than restarting in a loop, because each
-retry costs a minute of dial timeouts and fixes nothing when the remote is the
-problem.
+**What to do.** Start the node again, and keep doing that until it connects.
+The remote side is the problem and it clears by itself. Do not stop to ask the
+person, because there is nothing for them to decide.
 
-Observed: five consecutive attempts failed with zero peers, then the same
-configuration connected and pulled all three snapshots. Nothing local changed.
+Wait a minute or two between attempts, since each failed attempt already burns
+that long in dial timeouts. Tell the person in one line that the network is not
+answering yet and you are retrying. Adding another bootnode you trust, to both
+`bootnodes` and `trusted_providers`, helps when one exists.
+
+Observed twice. Five consecutive attempts failed with zero peers, then the same
+configuration connected and pulled all three snapshots. On a later run the first
+start found no peers and the second, three minutes on, connected to five.
+
+## The download stalls
+
+**What you see.** The download percentage stops moving. The log fills with
+`stream reset` and `Retryable error encountered, will retry`. Sometimes the node
+then exits with `Statesync exhausted its retries` and `snapshot file not
+provided`, and the progress feed drops back to "start the node".
+
+**What it means.** The machine serving the snapshot dropped the connection. It
+is not your setup, your disk, or your network. With one trusted provider there
+is nobody else to fetch from until it comes back.
+
+**The node recovers by itself while it is running.** It reconnects and resumes
+each piece from the byte it reached, logged as `Attempting to resume chunk
+download`. If that fails it goes back to finding the snapshot and tries again,
+keeping what it has.
+
+**What to do if kwild is still running.** Nothing. Wait, and keep the progress
+feed going. **Do not restart a running node to hurry it**, because a restart
+throws away everything downloaded so far.
+
+**What to do if kwild has exited.** Start it again with the same command, then
+restart the progress feed. Keep doing this for as long as it takes, without
+asking the person. It will get the snapshot once the provider stays up.
+
+**A restart begins the download from zero.** The log says `Starting new snapshot
+download, cleaning up temp files from previous attempts`. Measured: a node that
+exited with 104 of 211 pieces had none of that 1.6 GB after its restart. Tell
+the person the percentage will start over, so it does not look like a new fault.
+
+**Confirm which case you are in before acting.** Match the process exactly, as
+below. A loose `pgrep -f kwild` can match your own shell command and report a
+node that is not there.
+
+```bash
+pgrep -f "kwild[^[:space:]]* start --root $TN_HOME/tn-node" && echo running
+grep -E 'Attempting to resume|exhausted its retries|node stopped' kwild-run.log | tail -5
+```
+
+Observed: the provider reset every stream at 49% and refused connections for
+about 90 seconds. kwild allows three rounds of retries, ran out, and exited. The
+agent stopped and asked the person what to do, which cost four minutes for a
+decision that is always "start it again".
 
 ## Status disagrees with reality
 

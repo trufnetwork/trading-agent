@@ -253,9 +253,14 @@ log, so check its output rather than the RPC directly.
 **Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
 `scripts/onboard.sh --md` block to the person before acting.
 
-If it never starts, or the estimate swings wildly, see
-[FIELD-MANUAL.md](FIELD-MANUAL.md) under **Sync never starts** and **Sync speed
-swings wildly**. Do not restart in a loop, and do not trust a raw port test.
+**If the node exits during sync, start it again.** Keep doing that without
+asking the person. The usual cause is the remote side dropping out, and it
+clears by itself.
+
+**If the node is still running, leave it alone.** It resumes a dropped download
+by itself, and a restart throws away what it has. See
+[FIELD-MANUAL.md](FIELD-MANUAL.md) under **Sync never starts**, **The download
+stalls**, and **Sync speed swings wildly**. Do not trust a raw port test.
 
 ## Phase 5. SDK helper
 

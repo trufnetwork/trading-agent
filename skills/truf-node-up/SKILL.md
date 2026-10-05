@@ -301,10 +301,14 @@ to see the real error is libp2p's own logger.
 GOLOG_LOG_LEVEL="swarm2=debug,tcp-tpt=debug" kwild start --root ./tn-node
 ```
 
-**What to do.** Add another bootnode you trust, to both `bootnodes` and
-`trusted_providers`. Then wait rather than restarting in a loop, because a
-teardown and retry cycle costs a minute of dial timeouts each time and fixes
-nothing when the remote is the problem.
+**What to do.** If kwild has exited, start it again, and keep doing that until
+it connects. Do not stop to ask the person. Space attempts a minute or two
+apart, and add another bootnode you trust to both `bootnodes` and
+`trusted_providers` when one exists.
+
+**If kwild is still running mid-download, do not restart it.** It resumes a
+dropped download by itself, and a restart begins again from zero. See
+FIELD-MANUAL.md under **The download stalls**.
 
 Observed on 2026-09-18: five consecutive attempts failed with zero peers, then
 the same configuration connected and pulled all three snapshots. Nothing local
