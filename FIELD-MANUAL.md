@@ -122,6 +122,10 @@ keeping what it has.
 feed going. **Do not restart a running node to hurry it**, because a restart
 throws away everything downloaded so far.
 
+**Check the retry limit.** The runbook sets `max_retries = 500` under
+`[state_sync]` in `tn-node/config.toml`. If it still reads 3, the node gives up
+after about 90 seconds, so set it before the next start.
+
 **What to do if kwild has exited.** Start it again with the same command, then
 restart the progress feed. Keep doing this for as long as it takes, without
 asking the person. It will get the snapshot once the provider stays up.

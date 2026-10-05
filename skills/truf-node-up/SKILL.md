@@ -206,8 +206,14 @@ RPCPORT=$(grep TN_RPC_PORT .tn-env | cut -d= -f2)
 sed -i "s|^listen = '0.0.0.0:$RPCPORT'|listen = '127.0.0.1:$RPCPORT'|" tn-node/config.toml
 SOCK=$(grep TN_ADMIN_SOCKET .tn-env | cut -d= -f2)
 sed -i "s|^listen = '/tmp/kwild.socket'|listen = '$SOCK'|" tn-node/config.toml
+sed -i "s|^max_retries = 3$|max_retries = 500|" tn-node/config.toml
 grep -nE "^ *(port|listen) *=" tn-node/config.toml     # verify
 ```
+
+The `max_retries` line raises the state sync retry limit. With the generated value of 3
+the node exits after about 90 seconds without its snapshot provider, and the
+restart discards the download. The counter never resets, so 500 allows about
+three and a half hours of provider downtime across one run.
 
 **Only change the ports if they differ from what was generated.** When the
 defaults were free, `setup init` already wrote exactly the ports in `.tn-env`
