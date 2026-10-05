@@ -263,9 +263,8 @@ if [ "${1:-}" = "--shown" ]; then
   if [ -z "${2:-}" ] || [ "${2:-}" != "$(cat "$ROOT/.tn-code" 2>/dev/null || true)" ]; then
     echo "STOP: wrong or missing code. Run scripts/onboard.sh --md and use the code it prints."
   elif [ "$(python3 "$ROOT/scripts/shown-check.py" "$2" 2>/dev/null)" = "toolonly" ]; then
-    echo "STOP: checked the session transcript. The block is NOT in your message text. It only appeared inside a tool result, which the person cannot see."
-    echo "STOP: run scripts/onboard.sh --md as its own command, never chained with this one."
-    echo "STOP: reading the block or thinking about it does not show it. Write the whole block, including its last line, as plain text in your message now. Then run this command again."
+    echo "STOP: checked the session transcript. The block is NOT in a message the person received. It only appeared inside a tool result."
+    echo "STOP: text written between tool calls is often dropped before it reaches them. Use the hand-off below. It is the only delivery that works."
   else
     echo "$PHASE" > "$ROOT/.tn-shown"; SHOWN=$PHASE
   fi
@@ -274,7 +273,9 @@ if [ "$SHOWN" = "$PHASE" ] || [ -n "${TN_PEEK:-}" ]; then
   echo "NEXT: $NEXT"
 else
   echo "STOP: phase $PHASE has not been shown to the person. Do not act yet."
-  echo "STOP: 1. run scripts/onboard.sh --md, on its own"
-  echo "STOP: 2. write its whole output as text in your message, right now, before any other tool call. Do not end your turn and do not save it for a summary."
-  echo "STOP: 3. run scripts/status.sh --shown <code>, with the code from step 1, to get the next action"
+  echo "STOP: 1. run scripts/onboard.sh --md, as its own command"
+  echo "STOP: 2. start a wake-up timer as a BACKGROUND command: sleep 3"
+  echo "STOP: 3. END YOUR TURN. Your final message is the whole block from step 1, verbatim, and nothing else. A final message always reaches the person. Text between tool calls often does not."
+  echo "STOP: 4. the timer wakes you by itself, so the person does not need to reply. Then run scripts/status.sh --shown <code> to get the next action."
+  echo "STOP: no background commands in your runtime? Do steps 1 and 3, and continue when the person replies."
 fi

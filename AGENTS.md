@@ -18,14 +18,14 @@ in, run the status script first and do what it tells you.
 
 ```bash
 scripts/status.sh         # PHASE n of 7, and STOP on a phase not yet shown
-scripts/onboard.sh --md   # the block to write into your message, plus a code
+scripts/onboard.sh --md   # the block to send as a final message, plus a code
 scripts/status.sh --shown <code>   # then: the single next action
 ```
 
 **Show progress where the person can see it.** They cannot see your tool calls,
-only your message text. At every new phase, write the whole output of
-`scripts/onboard.sh --md` into your message before doing the work. Do not end
-your turn to do it, and do not save it for the end.
+and text between tool calls is often dropped. At every new phase, start a
+background `sleep 3`, then end your turn with the whole output of
+`scripts/onboard.sh --md`. The timer wakes you, so the person never has to reply.
 
 Three phases need a human: installing the Postgres 16 client, approving the
 agent wallet, and funding it. Stop and ask rather than trying to work around

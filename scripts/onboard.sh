@@ -134,9 +134,9 @@ render_md(){
   if [ "$pending" = 1 ]; then
     code=$(od -An -N2 -tx1 /dev/urandom | tr -d ' \n')
     echo "$code" > "$ROOT/.tn-code"
-    printf '<!-- agent: WRITE this whole block NOW as text in your message, verbatim, before any other tool call. Do not end your turn. Tool output is not shown to the person, your message text is. Then run: scripts/status.sh --shown %s -->\n\n' "$code"
+    printf '<!-- agent: start a background wake-up timer (sleep 3), then END YOUR TURN with this whole block, verbatim, as your final message. Text between tool calls often never reaches the person. The timer wakes you without them replying. Then run: scripts/status.sh --shown %s -->\n\n' "$code"
   else
-    printf '<!-- agent: write this whole block as text in your message, verbatim, before any other tool call. Tool output is not shown to the person. -->\n\n'
+    printf '<!-- agent: tool output is not shown to the person. To show this block, make it the final message of a turn. -->\n\n'
   fi
   local wk='⚙️ Working'
   # The banner rides along until the person has seen a first block and replied.

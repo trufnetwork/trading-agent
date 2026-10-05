@@ -3,15 +3,14 @@
 Follow this in order. It takes you from a bare machine to a placed trade on
 TRUF.NETWORK mainnet, using real money.
 
-**The loop is three steps. Keep going through all of them without ending your
-turn.**
+**The loop is three steps. The person never has to tell you to continue.**
 
 1. **Status.** Run `scripts/status.sh`. It prints `PHASE n of 7`. On a phase the
    person has not seen yet, it prints `STOP:` lines and no next action.
-2. **Show.** Run `scripts/onboard.sh --md` on its own. Write its whole output as
-   text in your message, right then, before any other tool call.
-3. **Act.** Run `scripts/status.sh --shown <code>` with the code from step 2. It
-   prints one `NEXT:` action. Do it, then go back to step 1.
+2. **Show.** Run `scripts/onboard.sh --md`. Start a background wake-up timer,
+   then end your turn with the whole block as your final message.
+3. **Act.** The timer wakes you. Run `scripts/status.sh --shown <code>` with the
+   code from step 2. It prints one `NEXT:` action. Do it, then go back to step 1.
 
 `status.sh` is safe to run at any time and works on a bare clone. **If you are
 resuming a session, start with it.** If a check fails, go to
@@ -24,25 +23,33 @@ at the cause.
 hidden from them. Running the display command shows the block to you and to
 nobody else.
 
-**Your message text is what they see, and they see it live.** So the block goes
-into your message the moment a phase starts, before you do the work. Do not
-save it for the end of the turn, and do not end the turn to show it. The person
-should watch the phases tick over while you keep working.
+**Text between tool calls is not a safe place either.** Some runtimes drop it
+before it reaches the person, and you get no sign that it happened. Only the
+final message of a turn is delivered every time.
 
-`scripts/onboard.sh --md` prints exactly what to write: a banner at the start, a
-progress bar, the phase table, and a panel saying what is happening. Write it
+**So each new phase is a hand-off that needs no reply.** Start a background
+command that finishes in a few seconds, such as `sleep 3`. End your turn with
+the block as the whole of your final message. When the timer exits, your runtime
+starts your next turn by itself and you carry on.
+
+The person sees the block appear, then sees you keep working. They never type
+anything between phases. If your runtime has no background commands, end the
+turn with the block and continue when the person replies.
+
+`scripts/onboard.sh --md` prints exactly what to send: a banner at the start, a
+progress bar, the phase table, and a panel saying what is happening. Send it
 verbatim, because the panel text was written for the person.
 
-Three tested runs of this runbook ran the display command at every phase and
-never wrote the output into the chat. The third had the code and still skipped
-the writing. Reading the block, or thinking about it, shows the person nothing.
+Three tested runs of this runbook ran the display command at every phase, and
+the person saw nothing until the end. One agent was sure it had pasted the
+block three times. None of it arrived.
 
 **The check is real.** In Claude Code, `status.sh --shown` reads the session
-transcript and refuses unless the whole block is in your message text. Run
-`onboard.sh --md` as its own command, write the block, then run the check.
+transcript and refuses unless the whole block is in a message you sent. Run
+`onboard.sh --md` as its own command, never chained with the check.
 
-**If the person asks what is happening, they have not seen the block.** Write it
-in your message at once, then carry on.
+**If the person asks what is happening, they have not seen the block.** Do the
+hand-off at once.
 
 If your runtime has a todo or task-list tool, mirror the seven phases there as
 well, with exactly one in progress at a time. That is a bonus on top of the
@@ -113,8 +120,8 @@ The commands are in section 2 of that skill. Hand them over and wait.
 
 **Check:** `psql --version` and `pg_dump --version` both report 16.x.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 ## Phase 2. Postgres
 
@@ -143,8 +150,8 @@ done
 
 **Check:** `scripts/status.sh` reports postgres reachable.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 Confirm the database that answered is **yours**. Another Kwil node's Postgres
 answers a connection and returns plausible data from a different chain. See
@@ -168,8 +175,8 @@ which is **mainnet**. The full command is in section 5 of the node skill.
 anything else you have initialised a private network that will sync instantly
 and contain nothing.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 ### Then fix two insecure defaults. This is not optional.
 
@@ -240,8 +247,8 @@ log, so check its output rather than the RPC directly.
 
 **Check:** `scripts/status.sh` reports `at tip`.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 If it never starts, or the estimate swings wildly, see
 [FIELD-MANUAL.md](FIELD-MANUAL.md) under **Sync never starts** and **Sync speed
@@ -260,8 +267,8 @@ analysis scripts need this binary. `keygen` writes `agent/agent.key` at mode
 
 **Check:** `scripts/status.sh` shows the binary built and the key present.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 ## Phase 6. Wallet — **HUMAN**
 
@@ -292,8 +299,8 @@ echo "TN_MAA=0x..." >> .tn-env
 
 **Check:** `scripts/status.sh` reports a USDC balance.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 ## Phase 7. Trade
 
@@ -318,8 +325,8 @@ scripts/portfolio.py <maa>
 **Check:** the position appears in `portfolio.py`, marked at the best
 other-party bid.
 
-**Show:** run `scripts/status.sh`. On a new phase, write the
-`scripts/onboard.sh --md` block into your message before acting.
+**Show:** run `scripts/status.sh`. On a new phase it tells you how to hand the
+`scripts/onboard.sh --md` block to the person before acting.
 
 Before trusting any number you derived yourself, read **Right data, wrong
 meaning** in [FIELD-MANUAL.md](FIELD-MANUAL.md). It is the failure that costs

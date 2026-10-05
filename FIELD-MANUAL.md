@@ -31,17 +31,16 @@ real run.
 **What you see.** You are making progress, and the person asks what is
 happening, or stops the run.
 
-**What it means.** They cannot see your tool calls. Running the display command
-shows the block to you. It reaches them only when you write it as text in your
-message.
+**What it means.** They cannot see your tool calls. Text you write between tool
+calls is often dropped as well, with no sign to you. Only the final message of a
+turn arrives every time.
 
-**What to do.** Run `scripts/onboard.sh --md` and write its whole output into
-your message now, before any other tool call. Then carry on. Do this at the
-start of every phase, not at the end of the turn.
+**What to do.** Run `scripts/onboard.sh --md`. Start a background `sleep 3`, then
+end your turn with the whole block as your final message. The timer starts your
+next turn, so the person does not need to reply.
 
-This happened on three outside tests of this runbook. Each agent ran the display
-command at every phase and wrote nothing into the chat. `status.sh --shown` now
-checks the Claude Code transcript and refuses until the block is really there.
+This happened on three outside tests of this runbook. `status.sh --shown` now
+checks the Claude Code transcript and refuses until the block was really sent.
 
 ## The socket path is too long
 
