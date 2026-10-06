@@ -362,8 +362,10 @@ It reads the node every minute, writes one line per event to
 `watch-portfolio.log` (a fill, a ladder settling, a payout, a ladder with the
 wrong number of winners), and exits by itself when nothing is left to watch. It
 costs nothing while it waits. Tell the person it is running and where the log
-is. Read the log when they ask, or tail it, rather than querying the node in a
-loop yourself.
+is. When they ask how things stand, run
+`scripts/watch-portfolio.py "$TN_MAA" --status`, which reports whether the
+watcher is alive, every position in words, and the last events. Do not poll
+the node in a loop yourself.
 
 **Check:** the position appears in `portfolio.py`, marked at the best
 other-party bid.

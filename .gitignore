@@ -23,3 +23,4 @@ streams.json
 .tn-shown
 .tn-code
 watch-portfolio.log
+.tn-watcher.pid

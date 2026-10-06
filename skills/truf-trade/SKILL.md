@@ -99,9 +99,10 @@ One command per action the rule allows, and nothing else exists.
 detached with `setsid nohup ... &`, after placing orders. It appends `FILLED`,
 `SETTLED`, `WARNING`, `PAID`, and `DONE` lines to `watch-portfolio.log` and
 exits when every position has settled. Settled positions are deleted from the
-node, so the log is the only record of how each one ended. `--notify` adds a
-desktop notification per event, `--keep` keeps it running after everything has
-settled.
+node, so the log is the only record of how each one ended. `--status` answers
+from any session with whether it is running, every position in words, and the
+last events. `--stop` ends it. `--notify` adds a desktop notification per
+event, `--keep` keeps it running after everything has settled.
 
 An order that has already filled cannot be cancelled, and the error is
 `Order not found`. Check `portfolio.py` before deciding a cancel failed.

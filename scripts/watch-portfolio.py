@@ -17,6 +17,13 @@ Events
   PAID      the wallet's free USDC changed
   DONE      nothing left to watch
 
+Ask it for status at any time, from any session:
+
+    scripts/watch-portfolio.py <maa> --status
+
+That prints whether the watcher is running, what it holds right now, and the
+last events it logged. --stop ends a running watcher.
+
 Options
   --interval SECONDS   poll gap, default 60
   --notify             also send a desktop notification per event
@@ -24,6 +31,7 @@ Options
 """
 import argparse
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -38,6 +46,41 @@ from tnconn import PSQL  # noqa: E402
 from describe import describe  # noqa: E402
 
 LOG = ROOT / "watch-portfolio.log"
+PID = ROOT / ".tn-watcher.pid"
+
+
+def running():
+    """pid of a live watcher, or None."""
+    try:
+        pid = int(PID.read_text().split()[0])
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def status(w, pid):
+    p = running()
+    if p:
+        started = datetime.fromtimestamp(PID.stat().st_mtime, timezone.utc)
+        print(f"WATCHER   running (pid {p}) since {started:%Y-%m-%d %H:%M UTC}")
+    else:
+        print("WATCHER   not running")
+    free, pos = snapshot(w, pid)
+    print(f"FREE      {free:.2f} USDC")
+    if not pos:
+        print("POSITIONS none")
+    for x in sorted(pos, key=lambda x: (x["settle_time"], x["query_id"])):
+        side = "YES" if x["outcome"] else "NO"
+        kind = "holding" if x["price"] == 0 else (f"bid at {-x['price']}c" if x["price"] < 0 else f"ask at {x['price']}c")
+        print(f"POSITION  {x['amount']} {side} {kind}, {describe(x['query_id'])[0]}")
+    if LOG.exists():
+        lines = LOG.read_text().splitlines()
+        print(f"LOG       {LOG} ({len(lines)} lines), last events:")
+        for line in lines[-8:]:
+            print("  " + line)
+    else:
+        print("LOG       nothing logged yet")
 
 
 def q(sql):
@@ -81,9 +124,20 @@ def main():
     ap.add_argument("--interval", type=int, default=60)
     ap.add_argument("--notify", action="store_true")
     ap.add_argument("--keep", action="store_true")
+    ap.add_argument("--status", action="store_true", help="report and exit")
+    ap.add_argument("--stop", action="store_true", help="end a running watcher")
     a = ap.parse_args()
     w = a.wallet.lower().removeprefix("0x")
     notify = a.notify and shutil.which("notify-send")
+
+    if a.stop:
+        p = running()
+        if p:
+            os.kill(p, 15)
+            print(f"stopped watcher pid {p}")
+        else:
+            print("no watcher running")
+        return
 
     def log(kind, msg):
         line = f"{datetime.now(timezone.utc):%Y-%m-%d %H:%M:%S} UTC  {kind:<8} {msg}"
@@ -97,6 +151,13 @@ def main():
     if not pid:
         sys.exit(f"wallet 0x{w} has no trading history on this node")
     pid = pid[0]["id"]
+
+    if a.status:
+        status(w, pid)
+        return
+    if running():
+        sys.exit(f"a watcher is already running (pid {running()}). Use --status or --stop.")
+    PID.write_text(f"{os.getpid()}\n")
 
     free, pos = snapshot(w, pid)
     log("START", f"watching 0x{w}: {len(pos)} positions, {free:.2f} USDC free, every {a.interval}s")
@@ -151,6 +212,7 @@ def main():
 
         if not a.keep and not pos:
             log("DONE", f"every position has settled. {free:.2f} USDC free.")
+            PID.unlink(missing_ok=True)
             return
 
 
