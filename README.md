@@ -255,6 +255,7 @@ the measurements, the reasoning, and the mistakes that produced each rule.
 | [scripts/edge.py](scripts/edge.py) | **Where is the price wrong, and what do I buy?** |
 | [scripts/describe.py](scripts/describe.py) | What is this order book, in words, with its trufscan link |
 | [scripts/portfolio.py](scripts/portfolio.py) | Cash, positions, cost basis, mark, settlement outcomes |
+| [scripts/watch-portfolio.py](scripts/watch-portfolio.py) | Detached watcher: logs fills, settlements and payouts, exits when done |
 | [agent/](agent/) | Go client: keygen, create-rule, derive, decode, buy |
 | [sql/indexer-schema.sql](sql/indexer-schema.sql) | Indexer tables, each naming its open question |
 | [scripts/markets.py](scripts/markets.py) | Live market report straight from Postgres |

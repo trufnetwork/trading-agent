@@ -352,6 +352,19 @@ scripts/portfolio.py <maa>
 The helper also has `sell`, `split`, and `cancel`, one for each action the
 agent rule allows. `skills/truf-trade/SKILL.md` describes each.
 
+**Then start the watcher, detached, and stop polling.**
+
+```bash
+setsid nohup scripts/watch-portfolio.py "$TN_MAA" > /dev/null 2>&1 < /dev/null &
+```
+
+It reads the node every minute, writes one line per event to
+`watch-portfolio.log` (a fill, a ladder settling, a payout, a ladder with the
+wrong number of winners), and exits by itself when nothing is left to watch. It
+costs nothing while it waits. Tell the person it is running and where the log
+is. Read the log when they ask, or tail it, rather than querying the node in a
+loop yourself.
+
 **Check:** the position appears in `portfolio.py`, marked at the best
 other-party bid.
 

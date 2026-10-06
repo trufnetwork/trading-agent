@@ -95,6 +95,14 @@ One command per action the rule allows, and nothing else exists.
   the shares to holdings. The chain stores a buy at a negative price, and the
   command handles that sign for you.
 
+**Watching.** `scripts/watch-portfolio.py <maa>` is the watcher. Start it once,
+detached with `setsid nohup ... &`, after placing orders. It appends `FILLED`,
+`SETTLED`, `WARNING`, `PAID`, and `DONE` lines to `watch-portfolio.log` and
+exits when every position has settled. Settled positions are deleted from the
+node, so the log is the only record of how each one ended. `--notify` adds a
+desktop notification per event, `--keep` keeps it running after everything has
+settled.
+
 An order that has already filled cannot be cancelled, and the error is
 `Order not found`. Check `portfolio.py` before deciding a cancel failed.
 

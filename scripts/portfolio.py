@@ -54,12 +54,12 @@ def band(components_hex):
     if r.returncode != 0:
         return None
     d = json.loads(r.stdout)
-    th = [float(x) * 100 for x in d["thresholds"]]
+    th = [float(x) for x in d["thresholds"]]
     if d["type"] == "below":
-        return f"below {th[0]:.2f}"
+        return f"below {th[0]:g}"
     if d["type"] == "above":
-        return f"above {th[0]:.2f}"
-    return f"{th[0]:.2f}-{th[1]:.2f}"
+        return f"above {th[0]:g}"
+    return f"{th[0]:g}-{th[1]:g}"
 
 
 def main():
