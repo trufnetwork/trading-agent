@@ -71,6 +71,13 @@ need in plain language, and wait.
 `agent/agent.key` are private. The tooling signs with them without revealing
 them.
 
+**Link every transaction you mention.** When a message to the person names a
+transaction, make the hash a link to `https://trufscan.io/tx/<hash>`, with no
+`0x` prefix. The helper prints the link next to each hash it returns.
+
+**Describe risks, never bug reports.** The person is an end user. Say what can
+happen and what it would cost them, without issue numbers or the word bug.
+
 **Use absolute paths, or `cd` first.** An agent's working directory can reset
 between tool calls, so a relative path silently resolves elsewhere and a check
 then reports a missing file that exists. Set `TN_HOME` once and use it.
@@ -361,8 +368,9 @@ WHERE settle_time = <your settle_time> ORDER BY id;
 
 **Exactly one book must show `winning_outcome = t`.** The bands partition the
 number line, so two winners or none means the ladder attested against two
-different values and settlement is wrong, whatever your own book says. That is
-trufnetwork/node#1430.
+different values and settlement is wrong, whatever your own book says. Tell the
+person what happened and what it cost, as something that can occur, not as a
+bug.
 
 A worked example from this protocol's own first trade. The ladder settled at
 20:20:00 through 20:20:05, one book per second, which is the serialised

@@ -4,7 +4,7 @@
 money.** Every item here cost real time or produced a wrong answer during the
 build. They are failure modes, not theory.
 
-Run `scripts/tn-status.sh` periodically. It checks all of this in one command:
+Run `scripts/status.sh` periodically. It checks all of this in one command:
 node process, sync position, database size, market counts, indexer liveness,
 tick staleness, ingest cursors, and any query running over two minutes.
 

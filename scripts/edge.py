@@ -176,8 +176,23 @@ def main():
               f"{('-' if se is None else f'{se:+.1f}'):>10} "
               f"{(r['size'] or '-'):>9}")
 
+    # Is the outcome already decided? Attestation captures whatever value is on
+    # chain at settle_time. If no further print is due before then, the current
+    # print is the resolving value, whatever the model or the prices say. The
+    # next print is expected one median gap after the last one.
+    hit = [r for r in rows
+           if (r["lo"] is None or cur >= r["lo"]) and (r["hi"] is None or cur < r["hi"])]
+    ev = [int(h["event_time"]) for h in hist]
+    last_t = ev[-1]
+    gaps = sorted(b - a for a, b in zip(ev[-13:], ev[-12:]))
+    gap = gaps[len(gaps) // 2] if gaps else None
+    decided = bool(gap) and last_t + gap > settle
+
     # ---- 4. what to do
-    if best and best[0] > 0:
+    if decided:
+        print("\nDECIDED   no further print is due before settlement, so the model's edge")
+        print("          does not apply. See IS IT DECIDED below before placing anything.")
+    elif best and best[0] > 0:
         e, r = best
         n_book = int(r["size"] or 0)
         n_cash = int(a.capital * 100 // r["ask"])
@@ -209,10 +224,10 @@ def main():
     # Three things can happen, and only one of them is correct:
     #
     #   print on chain BEFORE the window -> resolves on the new print
-    #   print lands INSIDE the window    -> ladder SPLITS: 2 or 0 winners (BUG)
+    #   print lands INSIDE the window    -> ladder SPLITS: 2 or 0 winners
     #   print arrives AFTER the window   -> resolves on the PRIOR print
     #
-    # Only the middle case is a bug (trufnetwork/node#1430). The third is the
+    # Only the middle case is a settlement fault. The third is the
     # DESIGNED behaviour: attestation captures whatever state exists at
     # settle_time, and print arrival is never a trigger. A provider that
     # publishes late simply resolves on the previous value.
@@ -323,8 +338,8 @@ def main():
         print(f"  last {n} settled ladders on this stream:")
         print(f"    {fine:>3} print was on chain first (resolved on the new print)")
         print(f"    {stale:>3} print arrived after attestation (resolved on the PRIOR")
-        print(f"        print, as designed: publication lag, not a bug)")
-        print(f"    {split:>3} straddled the print (EXPOSED to a split: BUG #1430)")
+        print(f"        print, as designed: publication lag)")
+        print(f"    {split:>3} straddled the print (exposed to a split settlement)")
         if unknown:
             print(f"    {unknown:>3} unclassified")
         print(f"  split harm: {bad_ladders} of {n} settled with a winner count other than 1")
@@ -337,6 +352,9 @@ def main():
     import datetime as _dt
     def _d(x):
         return _dt.datetime.fromtimestamp(x, _dt.timezone.utc).strftime("%Y-%m-%d")
+
+    def _dh(x):
+        return _dt.datetime.fromtimestamp(x, _dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     if sw_cad:
         print(f"\n  ** CADENCE CHANGED on {_d(sw_cad)} ** The stream now prints at a")
@@ -361,25 +379,34 @@ def main():
         print("  The value series is continuous either way, so the move model above uses")
         print("  the full history and is unaffected.")
 
-    # Whether the ladder attests early or straddles, the value already on chain is
-    # the one at risk of deciding it. Name the band it falls in.
-    if n and (stale or split):
-        hit = [r for r in rows
-               if (r["lo"] is None or cur >= r["lo"]) and (r["hi"] is None or cur < r["hi"])]
-        if hit:
-            r = hit[0]
-            b = (f"below {r['hi']:.2f}" if r["lo"] is None else
-                 f"above {r['lo']:.2f}" if r["hi"] is None else
-                 f"{r['lo']:.2f}-{r['hi']:.2f}")
-            ask = "no ask" if r["ask"] is None else f"{r['ask']}c"
-            print(f"  current print {cur:.4f} sits in order book {r['id']} ({b}), asking {ask}.")
-            if sw_time:
-                print("  That is the newest value on chain. This stream now stamps its publish")
-                print("  time, so expect it to be fresh at settlement rather than knowable early.")
-            else:
-                print("  This stream tends to publish after settle_time, so that is the value")
-                print("  attestation is likely to capture. Modelling publication lag, not a bug.")
-
+    # ---- 5. is the outcome already decided?
+    print("\nIS IT DECIDED?")
+    if hit:
+        r = hit[0]
+        b = (f"below {r['hi']:.2f}" if r["lo"] is None else
+             f"above {r['lo']:.2f}" if r["hi"] is None else
+             f"{r['lo']:.2f}-{r['hi']:.2f}")
+        ask = "no ask" if r["ask"] is None else f"{r['ask']}c"
+        print(f"  current print {cur:.4f} (from {_dh(last_t)}) sits in order book {r['id']} "
+              f"({b}), asking {ask}.")
+    else:
+        print(f"  current print {cur:.4f} (from {_dh(last_t)}) falls in no band of this ladder.")
+    if gap is None:
+        print("  Too few prints to know when the next one is due.")
+    elif decided:
+        print(f"  No further print is expected before settlement ({_dh(settle)}). The next")
+        print(f"  is due around {_dh(last_t + gap)}. Unless the publisher revises the value,")
+        print("  THIS MARKET IS DECIDED on the current print. Every other book is a loser,")
+        print("  and the book above is worth 100c to whoever holds it.")
+    else:
+        print(f"  Another print is due around {_dh(last_t + gap)}, before settlement at")
+        print(f"  {_dh(settle)}. The outcome is still open.")
+    if sw_time and not decided:
+        print("  This stream stamps its publish time, so the resolving value should be")
+        print("  fresh at settlement rather than knowable early.")
+    if stale and not sw_time:
+        print(f"  {stale} of the last {n} settlements resolved on the prior print, so this")
+        print("  stream has tended to publish after settle_time.")
 
     print("\nCAVEATS. The move model assumes normality and constant variance from "
           f"{len(moves)} observations. A maker quoting against you may hold intraday "

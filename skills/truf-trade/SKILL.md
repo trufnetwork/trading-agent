@@ -33,7 +33,7 @@ against both the book and the wallet, and reports settlement exposure.
 To find candidates first:
 
 ```bash
-psql -h 127.0.0.1 -p 5433 -U postgres -d kwild -f sql/market-scan.sql
+psql -h 127.0.0.1 -p "$(grep TN_PGPORT .tn-env | cut -d= -f2)" -U postgres -d kwild -f sql/market-scan.sql
 ```
 
 That returns one row per **market**, not per order book, ranked with the most
@@ -109,17 +109,18 @@ ledger. Remember `collateral_change` is a magnitude with its direction in
 
 ## Before you commit
 
-**Is the outcome already decided?** If a print already sits in the resolution
-window, the answer is fixed and any resting order is exposed to someone who
-knows it. `edge.py` reports this.
+**Is the outcome already decided?** If no further print is due before
+`settle_time`, the current print is the resolving value and every other book is
+a loser, whatever the prices say. `edge.py` says so under **IS IT DECIDED?** and
+withholds its buy recommendation when it is.
 
-**Does this ladder split?** The attestation bug in trufnetwork/node#1430 can
-settle a ladder with two winners or none, meaning a correct band can pay
-nothing. `edge.py` reports a stream's historical exposure and realised harm
+**Can this ladder split?** Settlement captures a ladder one book per block, so
+a print landing in that window can settle it with two winners or none, meaning
+a correct band can pay nothing. `edge.py` reports a stream's historical exposure and realised harm
 separately, because the two are different numbers.
 
 **What is the publication lag?** A stream that publishes after `settle_time`
-resolves on the previous value, which is already on chain. That is not a bug and
+resolves on the previous value, which is already on chain. That is by design and
 it is a legitimate edge.
 
 ## Fees

@@ -75,7 +75,7 @@ def report(show_all):
         ORDER BY q.settle_time
     """)
     if not markets:
-        print("No markets found. Is the node synced? (scripts/tn-status.sh)")
+        print("No markets found. Is the node synced? (scripts/status.sh)")
         return
 
     book = {}

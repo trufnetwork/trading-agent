@@ -16,6 +16,8 @@ RPC=${TN_RPC:-http://127.0.0.1:${TN_RPC_PORT:-8484}}
 UPSTREAM=${TN_UPSTREAM:-http://node-1.mainnet.truf.network:8484}
 
 ok(){ printf '  [ok]   %s\n' "$1"; }
+# grep -c prints 0 on no match and exits 1, so "|| echo 0" would print a second 0.
+cnt(){ local n; n=$(grep -c "$1" "$2" 2>/dev/null); echo "${n:-0}"; }
 no(){ printf '  [--]   %s\n' "$1"; }
 PHASE=0; NEXT=""
 step(){ [ -z "$NEXT" ] && { PHASE=$1; NEXT="$2"; }; }
@@ -179,9 +181,9 @@ if node_here; then
     if [ -f "$LOGF" ]; then
       # Peers first. Zero peers makes every downstream number meaningless, and
       # the failure otherwise presents as a snapshot problem.
-      echo "SYNC_PEERS_OK=$(grep -c 'Connected to peer' "$LOGF" 2>/dev/null || echo 0)"
-      echo "SYNC_DIAL_FAIL=$(grep -c 'failed to connect to' "$LOGF" 2>/dev/null || echo 0)"
-      echo "SYNC_CHUNKS=$(grep -c 'Received snapshot chunk' "$LOGF" 2>/dev/null || echo 0)"
+      echo "SYNC_PEERS_OK=$(cnt 'Connected to peer' "$LOGF")"
+      echo "SYNC_DIAL_FAIL=$(cnt 'failed to connect to' "$LOGF")"
+      echo "SYNC_CHUNKS=$(cnt 'Received snapshot chunk' "$LOGF")"
       # Bytes actually on disk. The chunk COUNT is in metadata kwild never logs,
       # so size is the only measurable progress during this stage.
       RS="$ROOT/tn-node/received_snapshots"
@@ -189,9 +191,9 @@ if node_here; then
       # kwild logs the real total once, as total_chunks in "Starting chunk download".
       TC=$(grep -oE 'total_chunks=[0-9]+' "$LOGF" 2>/dev/null | grep -oE '[0-9]+' | tail -1)
       [ -n "$TC" ] && echo "SYNC_CHUNK_TOTAL=$TC"
-      echo "SYNC_SNAPSHOTS=$(grep -c 'Discovered snapshot' "$LOGF" 2>/dev/null || echo 0)"
+      echo "SYNC_SNAPSHOTS=$(cnt 'Discovered snapshot' "$LOGF")"
       grep -q 'verified snapshot with trusted provider' "$LOGF" 2>/dev/null && echo "SYNC_VERIFIED=yes" || echo "SYNC_VERIFIED=no"
-      echo "SYNC_DISCOVERY_ROUNDS=$(grep -c 'Discovering snapshots' "$LOGF" 2>/dev/null || echo 0)"
+      echo "SYNC_DISCOVERY_ROUNDS=$(cnt 'Discovering snapshots' "$LOGF")"
     fi
   fi
   if [ -z "${L:-}" ]; then
@@ -200,7 +202,7 @@ if node_here; then
     # known rather than inventing a denominator.
     LOG="$ROOT/kwild-run.log"
     if [ -f "$LOG" ]; then
-      GOT=$(grep -c "Received snapshot chunk" "$LOG" 2>/dev/null || echo 0)
+      GOT=$(cnt "Received snapshot chunk" "$LOG")
       TOP=$(grep -o "chunk=[0-9]*" "$LOG" 2>/dev/null | grep -o "[0-9]*" | sort -n | tail -1)
       grep -q "verified snapshot with trusted provider" "$LOG" 2>/dev/null \
         && ok "snapshot verified with a trusted provider" \

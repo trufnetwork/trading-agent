@@ -27,6 +27,9 @@ and text between tool calls is often dropped. At every new phase, start a
 background `sleep 3`, then end your turn with the whole output of
 `scripts/onboard.sh --md`. The timer wakes you, so the person never has to reply.
 
+Link every transaction hash you mention to `https://trufscan.io/tx/<hash>`.
+Describe risks as things that can happen, never as bugs or issue numbers.
+
 Three phases need a human: installing the Postgres 16 client, approving the
 agent wallet, and funding it. Stop and ask rather than trying to work around
 them.

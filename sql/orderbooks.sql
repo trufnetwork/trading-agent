@@ -1,6 +1,6 @@
 -- Order books inside ONE market. Pass the market's stream and settle time.
 --
---   psql -h 127.0.0.1 -p 5433 -U postgres -d kwild \
+--   psql -h 127.0.0.1 -p $TN_PGPORT -U postgres -d kwild \
 --     -v stream="'<stream_id from sql/market-scan.sql>'" \
 --     -v settle=1789934100 -f sql/orderbooks.sql
 --

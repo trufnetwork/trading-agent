@@ -17,11 +17,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -35,11 +36,42 @@ import (
 	"github.com/trufnetwork/sdk-go/core/util"
 )
 
-const (
-	endpoint = "http://127.0.0.1:8485" // our own node
-	keyFile  = "agent.key"             // 0600, gitignored, never printed
-	ruleFile = "rule.id"
+// Files live next to this binary, so `./agent/agent keygen` from the repo root
+// and `./agent keygen` from inside agent/ write the same agent/agent.key.
+// The node endpoint comes from TN_RPC, else TN_RPC_PORT, else .tn-env at the
+// repo root (written by scripts/ports.sh), else the upstream default.
+var (
+	endpoint string
+	keyFile  string // 0600, gitignored, never printed
+	ruleFile string
 )
+
+func init() {
+	dir := "."
+	if exe, err := os.Executable(); err == nil {
+		dir = filepath.Dir(exe)
+	}
+	keyFile = filepath.Join(dir, "agent.key")
+	ruleFile = filepath.Join(dir, "rule.id")
+
+	port := os.Getenv("TN_RPC_PORT")
+	if port == "" {
+		if b, err := os.ReadFile(filepath.Join(dir, "..", ".tn-env")); err == nil {
+			for _, line := range strings.Split(string(b), "\n") {
+				if v, ok := strings.CutPrefix(line, "TN_RPC_PORT="); ok {
+					port = strings.TrimSpace(v)
+				}
+			}
+		}
+	}
+	if port == "" {
+		port = "8484"
+	}
+	endpoint = "http://127.0.0.1:" + port
+	if e := os.Getenv("TN_RPC"); e != "" {
+		endpoint = e
+	}
+}
 
 // The canonical liquidity-agent allow-list. Exactly four actions, all in `main`.
 // Deliberately absent: every withdraw/bridge primitive, create_market and
@@ -121,7 +153,7 @@ func keygen() error {
 func loadKey() (*crypto.Secp256k1PrivateKey, error) {
 	b, err := os.ReadFile(keyFile)
 	if err != nil {
-		return nil, fmt.Errorf("no agent key: run `go run . keygen` first (%w)", err)
+		return nil, fmt.Errorf("no agent key: run `keygen` first (%w)", err)
 	}
 	raw, err := hex.DecodeString(strings.TrimSpace(string(b)))
 	if err != nil {
@@ -186,7 +218,7 @@ func createRule() error {
 	if err != nil {
 		return fmt.Errorf("create rule: %w", err)
 	}
-	fmt.Printf("tx: %s\nwaiting for inclusion...\n", tx)
+	fmt.Printf("tx: %s\nhttps://trufscan.io/tx/%s\nwaiting for inclusion...\n", tx, tx)
 	h, err := kwilTypes.NewHashFromString(tx)
 	if err != nil {
 		return fmt.Errorf("parse tx hash %q: %w", tx, err)
@@ -221,7 +253,7 @@ func derive(ownerHex string) error {
 	}
 	rb, err := os.ReadFile(ruleFile)
 	if err != nil {
-		return fmt.Errorf("no rule id: run `go run . create-rule` first (%w)", err)
+		return fmt.Errorf("no rule id: run `create-rule` first (%w)", err)
 	}
 	ruleID, err := hex.DecodeString(strings.TrimPrefix(strings.TrimSpace(string(rb)), "0x"))
 	if err != nil {
@@ -336,7 +368,7 @@ func buy(maaHex, bookStr, side, priceStr, amountStr string) error {
 	if err != nil {
 		return fmt.Errorf("place_buy_order as MAA: %w", err)
 	}
-	fmt.Printf("tx: %s\nwaiting for inclusion...\n", tx)
+	fmt.Printf("tx: %s\nhttps://trufscan.io/tx/%s\nwaiting for inclusion...\n", tx, tx)
 	h, err := kwilTypes.NewHashFromString(tx)
 	if err != nil {
 		return fmt.Errorf("parse tx hash: %w", err)

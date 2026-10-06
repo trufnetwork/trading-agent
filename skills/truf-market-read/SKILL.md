@@ -15,7 +15,7 @@ Market state lives in schema `main` of the node's Postgres. Query it with plain
 SQL. Never write to it, because that database is consensus state.
 
 ```bash
-psql -h 127.0.0.1 -p 5433 -U postgres -d kwild
+psql -h 127.0.0.1 -p "$(grep TN_PGPORT .tn-env | cut -d= -f2)" -U postgres -d kwild
 ```
 
 ## Rule 0: verify what a value MEANS before computing on it
@@ -208,13 +208,12 @@ That makes publication lag a **tradeable property of the stream**. Where a
 stream reliably publishes after `settle_time`, the resolving value is already on
 chain and the outcome is knowable in advance.
 
-One real bug applies here. The scheduler broadcasts one attestation request per
+One hazard applies here. The scheduler broadcasts one attestation request per
 order book and waits for each to commit, so a ladder is captured one book per
 block.
 
-If a print lands inside that window the ladder splits and settles with two
-winners or none. Tracked as trufnetwork/node#1430, and `scripts/edge.py` reports
-a stream's exposure to it.
+If a print lands inside that window the ladder can split and settle with two
+winners or none. `scripts/edge.py` reports a stream's exposure to it.
 
 ## Data you cannot get back
 

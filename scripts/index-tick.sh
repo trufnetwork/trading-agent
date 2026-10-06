@@ -37,7 +37,7 @@
 #   scripts/index-tick.sh --loop   # every 60s
 set -uo pipefail
 
-NODE="psql -h 127.0.0.1 -p 5433 -U postgres -d kwild -tAX"
+NODE="psql -h 127.0.0.1 -p ${TN_PGPORT:-5432} -U postgres -d kwild -tAX"
 IDX="psql -h 127.0.0.1 -p 5434 -U postgres -d tnidx -tAX"
 
 nq() { $NODE -c "$1"; }

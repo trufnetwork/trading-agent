@@ -1,6 +1,6 @@
 -- Market scan. One row per MARKET.
 --
---   psql -h 127.0.0.1 -p 5433 -U postgres -d kwild -f sql/market-scan.sql
+--   psql -h 127.0.0.1 -p $TN_PGPORT -U postgres -d kwild -f sql/market-scan.sql
 --
 -- TERMINOLOGY, as used on TRUF.NETWORK:
 --

@@ -256,7 +256,6 @@ the measurements, the reasoning, and the mistakes that produced each rule.
 | [scripts/portfolio.py](scripts/portfolio.py) | Cash, positions, cost basis, mark, settlement outcomes |
 | [agent/](agent/) | Go client: keygen, create-rule, derive, decode, buy |
 | [sql/indexer-schema.sql](sql/indexer-schema.sql) | Indexer tables, each naming its open question |
-| [scripts/tn-status.sh](scripts/tn-status.sh) | Node process, sync position, DB readiness |
 | [scripts/markets.py](scripts/markets.py) | Live market report straight from Postgres |
 | [scripts/refresh-streams.py](scripts/refresh-streams.py) | Stream names from trufscan (no on-chain names exist) |
 | [scripts/index-tick.sh](scripts/index-tick.sh) | One ingest tick, or `--loop` |
@@ -272,13 +271,9 @@ This matters more than usual: an agent replaying this protocol has no way to
 tell a measured fact from a confident guess unless the document says which it
 is.
 
-## Ports (side-by-side deployment)
+## Ports
 
-Kwil-family nodes default to 8484 / 6600 / 5432 and collide with any other node
-on the machine. This deployment deliberately shifts:
-
-| Service | Port |
-|---------|------|
-| Postgres | 5433 |
-| Node RPC | 127.0.0.1:8485 |
-| P2P | 0.0.0.0:6601 |
+Kwil-family nodes default to 8484 (RPC), 6600 (P2P), and 5432 (Postgres), and
+collide with any other node on the machine. `scripts/ports.sh` keeps the
+defaults when they are free and steps to the next free port when not, recording
+the choice in `.tn-env`. Every script reads its ports from there.

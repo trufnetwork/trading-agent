@@ -82,8 +82,8 @@ while every dial fails, because the remote accepts the socket and never
 completes the libp2p handshake. Each dial then burns a full 15 second timeout.
 
 **kwild will not tell you why.** It keeps the addresses and discards the
-per-address causes, at every log level. See trufnetwork/kwil-db#1738. The only
-way through is libp2p's own logger.
+per-address causes, at every log level. The only way through is libp2p's own
+logger.
 
 ```bash
 GOLOG_LOG_LEVEL="swarm2=debug,tcp-tpt=debug" kwild start --root ./tn-node
@@ -316,8 +316,8 @@ winning bands, or none.
 
 **What it means.** The settlement scheduler attests one order book per block, so
 a ladder is captured across several blocks. If a print lands inside that window,
-books on either side resolve against different values. Tracked as
-trufnetwork/node#1430.
+books on either side resolve against different values. This can happen on any
+ladder whose settle time coincides with a print.
 
 **What to do.** Check the whole ladder, not just your own book. Exactly one book
 should show `winning_outcome = true`. `scripts/edge.py` reports a stream's
@@ -332,7 +332,7 @@ numbers.
 **What it means.** Resolution fell through to the `get_record` fallback, which
 returns the last known value regardless of the window. The market still settles.
 
-**What to do.** Treat it as a data gap rather than a settlement bug. `edge.py`
+**What to do.** Treat it as a data gap rather than a settlement fault. `edge.py`
 reports how many recent settlements had no print in window.
 
 ## A publisher changed its schedule

@@ -46,7 +46,7 @@ render(){
     else mark="${D}·${R}"; fi
     detail=""
     case $i in
-      1) detail=$(printf '%s' "$out" | grep -c '^  \[ok\]' >/dev/null && printf '%s' "$(printf '%s' "$out" | sed -n '/1. tools/,/2. postgres/p' | grep -c '\[ok\]')/4 present") ;;
+      1) detail=$(printf '%s' "$out" | grep -c '^  \[ok\]' >/dev/null && printf '%s' "$(printf '%s' "$out" | sed -n '/1. tools/,/2. postgres/p' | grep -cE '\[ok\]   (kwild|psql|docker|go)( |$)')/4 present") ;;
       2) detail=$(printf '%s' "$out" | sed -n '/2. postgres/,/3. node/p' | sed -n 's/.*\] *//p' | head -1) ;;
       3) detail=$(printf '%s' "$out" | sed -n '/3. node config/,/4. sync/p' | sed -n 's/.*\] *//p' | head -1) ;;
       4) detail=$(printf '%s' "$out" | grep -m1 'restore progress:' | sed 's/.*progress: //;s/ received, highest.*//;s/$/ restored/')
@@ -162,7 +162,7 @@ render_md(){
     else mark="⬜"; fi
     detail=""
     case $i in
-      1) detail="$(printf '%s' "$out" | sed -n '/1. tools/,/2. postgres/p' | grep -c '\[ok\]')/4 present" ;;
+      1) detail="$(printf '%s' "$out" | sed -n '/1. tools/,/2. postgres/p' | grep -cE '\[ok\]   (kwild|psql|docker|go)( |$)')/4 present" ;;
       2) detail=$(printf '%s' "$out" | sed -n '/2. postgres/,/3. node/p' | sed -n 's/.*\] *//p' | head -1) ;;
       3) detail=$(printf '%s' "$out" | sed -n '/3. node config/,/4. sync/p' | sed -n 's/.*\] *//p' | head -1) ;;
       4) detail=$(printf '%s' "$out" | grep -m1 'restore progress:' | sed 's/.*progress: //;s/ received, highest.*//;s/$/ restored/')
@@ -300,6 +300,8 @@ render_line(){
     base=$(v SYNC_BASE)
     tip=$(curl -s --max-time 6 "${TN_UPSTREAM:-http://node-1.mainnet.truf.network:8484}/api/v1/health" 2>/dev/null | python3 -c "import sys,json;print(json.load(sys.stdin)['services']['user']['height'])" 2>/dev/null)
     csecs=0; [ -n "$tip" ] && [ -n "$base" ] && csecs=$(awk -v d=$((tip-base)) 'BEGIN{printf "%d",d/1.98}')
+    # The load into Postgres sits between download and catch-up. Measured 39m.
+    csecs=$((csecs + ${TN_APPLY_SECS:-2340}))
     printf '📥 **downloading %s%%** · %s/%s pieces · %s GB · %s elapsed · all done ~%s\n' \
       "$pct" "$ch" "${tc:-?}" "$gb" "$el" "$(date -d "+$((rem+csecs)) seconds" '+%H:%M %a')"
   elif [ "$stage" = "apply" ]; then

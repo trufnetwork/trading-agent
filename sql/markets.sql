@@ -1,5 +1,5 @@
 -- Prediction market reads against a local TN node.
--- Connect: psql -h 127.0.0.1 -p 5433 -U postgres -d kwild
+-- Connect: psql -h 127.0.0.1 -p $TN_PGPORT -U postgres -d kwild
 --
 -- Kwil stores each namespace as a Postgres schema of the SAME NAME.
 -- The prediction market protocol lives in the `main` namespace => schema `main`.
