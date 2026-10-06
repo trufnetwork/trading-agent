@@ -71,6 +71,12 @@ need in plain language, and wait.
 `agent/agent.key` are private. The tooling signs with them without revealing
 them.
 
+**Never give a bare order book number.** The person does not know what 1719
+is. Every time you name a book, say what the market is: the stream's name, the
+question, and when it settles. `scripts/describe.py <book>` prints that line
+with a link to the book on trufscan, and `edge.py` and `portfolio.py` include
+it. Link the name to that page.
+
 **Link every transaction you mention.** When a message to the person names a
 transaction, make the hash a link to `https://trufscan.io/tx/<hash>`, with no
 `0x` prefix. The helper prints the link next to each hash it returns.

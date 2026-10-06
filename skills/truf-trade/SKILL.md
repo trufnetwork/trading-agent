@@ -76,6 +76,7 @@ narrower wheels, so prefer `sdk-go`.
 ./agent/agent create-rule               # operator side, no funds needed
 ./agent/agent derive <owner>            # expected agent address, give to owner
 ./agent/agent decode <hex>              # strike bands out of the ABI blob
+scripts/describe.py <book>              # what the market is, in words, with its trufscan link
 ./agent/agent buy <maa> <order-book> <yes|no> <price-cents> <shares>
 ```
 

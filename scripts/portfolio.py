@@ -36,6 +36,7 @@ AGENT_MISSING = (
 )
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from tnconn import PSQL  # noqa: E402  ports resolve via .tn-env, env, then defaults
+from describe import describe  # noqa: E402
 
 
 def q(sql):
@@ -146,6 +147,7 @@ def main():
             cost = p["amount"] * (p["best_bid"] or 0) / 100.0
             print(f"  book {p['query_id']}: {p['amount']} shares -> ${win:.2f} if it wins, "
                   f"$0.00 if not (marked ${cost:.2f})")
+            print(f"    {describe(p['query_id'])[0]}")
 
     print("\nMark is the best OTHER-PARTY bid, which is what you could sell into now.")
 

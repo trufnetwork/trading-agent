@@ -44,6 +44,7 @@ AGENT_MISSING = (
 )
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from tnconn import PSQL  # noqa: E402  ports resolve via .tn-env, env, then defaults
+from describe import describe  # noqa: E402
 
 
 def q(sql):
@@ -113,15 +114,19 @@ def main():
     # if streams.json has been built. Without it, show the id once rather than
     # twice, and say how to get names.
     label = names.get(stream)
-    print(f"MARKET  {label}  ({stream})" if label else f"MARKET  {stream}")
-    if not label:
-        print("        (no name cached, run scripts/refresh-streams.py for tickers)")
+    desc_line, desc = describe(a.order_book)
+    if desc.get("name"):
+        print(f"MARKET  {desc['name']}  ({stream})")
+        print(f"        {desc['ask']}, per order book {a.order_book}: {desc['url']}")
+    else:
+        print(f"MARKET  {label}  ({stream})" if label else f"MARKET  {stream}")
+        print(f"        {desc_line}")
     print(f"        provider {provider}  stream_ref {sid}")
     print(f"        settles {datetime.fromtimestamp(settle, timezone.utc):%Y-%m-%d %H:%M UTC}"
           f"   in {hrs:.1f}h   {len(books)} order books")
 
     # ---- 2. current value and daily move distribution
-    hist = q(f"""SELECT pe.event_time, pe.value::float8*100 AS v
+    hist = q(f"""SELECT pe.event_time, pe.value::float8 AS v
                  FROM main.primitive_events pe
                  WHERE pe.stream_ref = {sid}
                    AND pe.event_time > extract(epoch FROM now())::INT8 - 86400*{a.days}
@@ -140,7 +145,7 @@ def main():
     rows = []
     for b in books:
         d = decode(b["c"])
-        th = [float(x) * 100 for x in d["thresholds"]]
+        th = [float(x) for x in d["thresholds"]]
         lo, hi = (None, th[0]) if d["type"] == "below" else \
                  (th[0], None) if d["type"] == "above" else (th[0], th[1])
         p = (N.cdf((hi - cur) if hi is not None else 9e9) -
@@ -161,9 +166,9 @@ def main():
     print("-" * 74)
     best = None
     for r in rows:
-        band = (f"below {r['hi']:.2f}" if r["lo"] is None else
-                f"above {r['lo']:.2f}" if r["hi"] is None else
-                f"{r['lo']:.2f}-{r['hi']:.2f}")
+        band = (f"below {r['hi']:g}" if r["lo"] is None else
+                f"above {r['lo']:g}" if r["hi"] is None else
+                f"{r['lo']:g}-{r['hi']:g}")
         # buy edge = P - ask (you pay the ask). sell edge = bid - P (you receive the bid).
         be = (r["p"] - r["ask"]) if r["ask"] is not None else None
         se = (r["bid"] - r["p"]) if r["bid"] is not None else None
@@ -383,9 +388,9 @@ def main():
     print("\nIS IT DECIDED?")
     if hit:
         r = hit[0]
-        b = (f"below {r['hi']:.2f}" if r["lo"] is None else
-             f"above {r['lo']:.2f}" if r["hi"] is None else
-             f"{r['lo']:.2f}-{r['hi']:.2f}")
+        b = (f"below {r['hi']:g}" if r["lo"] is None else
+             f"above {r['lo']:g}" if r["hi"] is None else
+             f"{r['lo']:g}-{r['hi']:g}")
         ask = "no ask" if r["ask"] is None else f"{r['ask']}c"
         print(f"  current print {cur:.4f} (from {_dh(last_t)}) sits in order book {r['id']} "
               f"({b}), asking {ask}.")
