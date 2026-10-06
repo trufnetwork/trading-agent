@@ -349,6 +349,9 @@ two winners or none.
 scripts/portfolio.py <maa>
 ```
 
+The helper also has `sell`, `split`, and `cancel`, one for each action the
+agent rule allows. `skills/truf-trade/SKILL.md` describes each.
+
 **Check:** the position appears in `portfolio.py`, marked at the best
 other-party bid.
 

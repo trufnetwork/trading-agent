@@ -77,10 +77,28 @@ narrower wheels, so prefer `sdk-go`.
 ./agent/agent derive <owner>            # expected agent address, give to owner
 ./agent/agent decode <hex>              # strike bands out of the ABI blob
 scripts/describe.py <book>              # what the market is, in words, with its trufscan link
-./agent/agent buy <maa> <order-book> <yes|no> <price-cents> <shares>
+./agent/agent buy    <maa> <order-book> <yes|no> <price-cents> <shares>
+./agent/agent sell   <maa> <order-book> <yes|no> <price-cents> <shares>
+./agent/agent split  <maa> <order-book> <yes-price-cents> <pairs>
+./agent/agent cancel <maa> <order-book> <yes|no> <buy|sell> <price-cents>
 ```
 
-The order goes through the agent's permission boundary:
+One command per action the rule allows, and nothing else exists.
+
+- **buy** rests a bid and locks `shares * price / 100` USDC until it fills,
+  is cancelled, or the market settles.
+- **sell** lists shares the wallet already holds. Nothing is locked.
+- **split** mints pairs for $1.00 each, keeps the YES and lists the NO at
+  `100 - price`. This is how a maker quotes both sides.
+- **cancel** removes one resting order. Name it by side, kind, and the price
+  it was placed at. A cancelled buy refunds its USDC, a cancelled sell returns
+  the shares to holdings. The chain stores a buy at a negative price, and the
+  command handles that sign for you.
+
+An order that has already filled cannot be cancelled, and the error is
+`Order not found`. Check `portfolio.py` before deciding a cancel failed.
+
+Each command goes through the agent's permission boundary:
 
 ```go
 tx, err := actions.ExecuteAgentAction(ctx, types.MAAExecuteInput{

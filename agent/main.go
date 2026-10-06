@@ -6,6 +6,9 @@
 //	go run . create-rule         # registers the rule, prints the Rule ID
 //	go run . derive <owner-0x..> # prints the expected agent wallet address
 //
+// Then the four trading commands, one per action the rule allows:
+// buy, sell, split (mint a pair and list the NO side), and cancel.
+//
 // The AGENT key created here is the restricted key. It can place and cancel
 // orders as the agent wallet and can never move funds out. The OWNER key is the
 // user's and never touches this machine.
@@ -86,7 +89,10 @@ var allowed = []string{
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("usage: keygen | create-rule | derive <owner> | decode <hex> |")
-		fmt.Println("       buy <maa> <order-book> <yes|no> <price-cents> <shares>")
+		fmt.Println("       buy    <maa> <order-book> <yes|no> <price-cents> <shares>")
+		fmt.Println("       sell   <maa> <order-book> <yes|no> <price-cents> <shares>")
+		fmt.Println("       split  <maa> <order-book> <yes-price-cents> <pairs>")
+		fmt.Println("       cancel <maa> <order-book> <yes|no> <buy|sell> <price-cents>")
 		os.Exit(2)
 	}
 	var err error
@@ -100,6 +106,24 @@ func main() {
 			err = fmt.Errorf("buy <maa-address> <order-book-id> <yes|no> <price-cents> <shares>")
 		} else {
 			err = buy(os.Args[2], os.Args[3], os.Args[4], os.Args[5], os.Args[6])
+		}
+	case "sell":
+		if len(os.Args) < 7 {
+			err = fmt.Errorf("sell <maa-address> <order-book-id> <yes|no> <price-cents> <shares>")
+		} else {
+			err = sell(os.Args[2], os.Args[3], os.Args[4], os.Args[5], os.Args[6])
+		}
+	case "split":
+		if len(os.Args) < 6 {
+			err = fmt.Errorf("split <maa-address> <order-book-id> <yes-price-cents> <pairs>")
+		} else {
+			err = split(os.Args[2], os.Args[3], os.Args[4], os.Args[5])
+		}
+	case "cancel":
+		if len(os.Args) < 7 {
+			err = fmt.Errorf("cancel <maa-address> <order-book-id> <yes|no> <buy|sell> <price-cents>")
+		} else {
+			err = cancel(os.Args[2], os.Args[3], os.Args[4], os.Args[5], os.Args[6])
 		}
 	case "decode":
 		if len(os.Args) < 3 {
@@ -309,39 +333,148 @@ func decodeMarket(hexstr string) error {
 //	place_buy_order($query_id INT, $outcome BOOL, $price INT, $amount INT8)
 //
 // price is cents, 1..99. amount is a share count.
-func buy(maaHex, bookStr, side, priceStr, amountStr string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
-	defer cancel()
+// parseSide maps yes/no to the outcome flag the actions take.
+func parseSide(side string) (bool, error) {
+	switch strings.ToLower(side) {
+	case "yes":
+		return true, nil
+	case "no":
+		return false, nil
+	}
+	return false, fmt.Errorf("side must be yes or no, got %q", side)
+}
 
+func parseCents(priceStr string) (int, error) {
+	price, err := strconv.Atoi(priceStr)
+	if err != nil {
+		return 0, fmt.Errorf("price: %w", err)
+	}
+	if price < 1 || price > 99 {
+		return 0, fmt.Errorf("price must be 1..99 cents, got %d", price)
+	}
+	return price, nil
+}
+
+func parseShares(amountStr string) (int64, error) {
+	amount, err := strconv.ParseInt(amountStr, 10, 64)
+	if err != nil || amount <= 0 {
+		return 0, fmt.Errorf("shares must be a positive integer")
+	}
+	return amount, nil
+}
+
+// buy: place_buy_order. Locks amount*price/100 USDC from the agent wallet.
+func buy(maaHex, bookStr, side, priceStr, amountStr string) error {
 	book, err := strconv.Atoi(bookStr)
 	if err != nil {
 		return fmt.Errorf("order book id: %w", err)
 	}
-	price, err := strconv.Atoi(priceStr)
+	price, err := parseCents(priceStr)
 	if err != nil {
-		return fmt.Errorf("price: %w", err)
+		return err
 	}
-	if price < 1 || price > 99 {
-		return fmt.Errorf("price must be 1..99 cents, got %d", price)
+	amount, err := parseShares(amountStr)
+	if err != nil {
+		return err
 	}
-	amount, err := strconv.ParseInt(amountStr, 10, 64)
-	if err != nil || amount <= 0 {
-		return fmt.Errorf("shares must be a positive integer")
+	outcome, err := parseSide(side)
+	if err != nil {
+		return err
 	}
-	var outcome bool
-	switch strings.ToLower(side) {
-	case "yes":
-		outcome = true
-	case "no":
-		outcome = false
+	return execute(maaHex, "place_buy_order", []any{book, outcome, price, amount},
+		fmt.Sprintf("BUY %d %s @ %dc on order book %d", amount, strings.ToUpper(side), price, book),
+		fmt.Sprintf("%.2f USDC locked from the agent wallet", float64(amount)*float64(price)/100.0))
+}
+
+// sell: place_sell_order. Lists shares the wallet already holds. Nothing is
+// locked, because the shares themselves are the collateral.
+func sell(maaHex, bookStr, side, priceStr, amountStr string) error {
+	book, err := strconv.Atoi(bookStr)
+	if err != nil {
+		return fmt.Errorf("order book id: %w", err)
+	}
+	price, err := parseCents(priceStr)
+	if err != nil {
+		return err
+	}
+	amount, err := parseShares(amountStr)
+	if err != nil {
+		return err
+	}
+	outcome, err := parseSide(side)
+	if err != nil {
+		return err
+	}
+	return execute(maaHex, "place_sell_order", []any{book, outcome, price, amount},
+		fmt.Sprintf("SELL %d %s @ %dc on order book %d", amount, strings.ToUpper(side), price, book),
+		"no collateral, the shares are already held")
+}
+
+// split: place_split_limit_order. Mints amount YES+NO pairs for $1.00 each,
+// keeps the YES and lists the NO at 100-yesPrice. This is how a maker quotes.
+func split(maaHex, bookStr, priceStr, amountStr string) error {
+	book, err := strconv.Atoi(bookStr)
+	if err != nil {
+		return fmt.Errorf("order book id: %w", err)
+	}
+	price, err := parseCents(priceStr)
+	if err != nil {
+		return err
+	}
+	amount, err := parseShares(amountStr)
+	if err != nil {
+		return err
+	}
+	return execute(maaHex, "place_split_limit_order", []any{book, price, amount},
+		fmt.Sprintf("SPLIT %d pairs on order book %d: hold YES, sell NO @ %dc", amount, book, 100-price),
+		fmt.Sprintf("%.2f USDC locked from the agent wallet", float64(amount)))
+}
+
+// cancel: cancel_order. The chain stores a buy at -price and a sell at +price,
+// and cancel takes the stored price, so the kind decides the sign. A buy
+// refunds its locked USDC, a sell returns the shares to holdings.
+func cancel(maaHex, bookStr, side, kind, priceStr string) error {
+	book, err := strconv.Atoi(bookStr)
+	if err != nil {
+		return fmt.Errorf("order book id: %w", err)
+	}
+	price, err := parseCents(priceStr)
+	if err != nil {
+		return err
+	}
+	outcome, err := parseSide(side)
+	if err != nil {
+		return err
+	}
+	switch strings.ToLower(kind) {
+	case "buy":
+		price = -price
+	case "sell":
 	default:
-		return fmt.Errorf("side must be yes or no, got %q", side)
+		return fmt.Errorf("kind must be buy or sell, got %q", kind)
 	}
+	return execute(maaHex, "cancel_order", []any{book, outcome, price},
+		fmt.Sprintf("CANCEL %s %s @ %dc on order book %d", strings.ToUpper(kind), strings.ToUpper(side), abs(price), book),
+		"locked funds or shares return to the agent wallet")
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+// execute runs one allow-listed action as the agent wallet and waits for it
+// to commit. Every trading command goes through here.
+func execute(maaHex, action string, args []any, what, money string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
 	maaAddr, err := util.NewEthereumAddressFromString(strings.TrimSpace(maaHex))
 	if err != nil {
 		return fmt.Errorf("bad MAA address: %w", err)
 	}
-
 	c, priv, err := client(ctx)
 	if err != nil {
 		return err
@@ -354,19 +487,17 @@ func buy(maaHex, bookStr, side, priceStr, amountStr string) error {
 
 	fmt.Printf("agent wallet : %s\n", maaAddr.Address())
 	fmt.Printf("signing as   : %s (restricted)\n", agent)
-	fmt.Printf("order        : BUY %d %s @ %dc on order book %d\n",
-		amount, strings.ToUpper(side), price, book)
-	fmt.Printf("collateral   : %.2f USDC locked from the agent wallet\n\n",
-		float64(amount)*float64(price)/100.0)
+	fmt.Printf("order        : %s\n", what)
+	fmt.Printf("collateral   : %s\n\n", money)
 
 	tx, err := actions.ExecuteAgentAction(ctx, types.MAAExecuteInput{
 		MAAAddress: maaAddr.Bytes(),
 		Namespace:  "main",
-		Action:     "place_buy_order",
-		Args:       []any{book, outcome, price, amount},
+		Action:     action,
+		Args:       args,
 	})
 	if err != nil {
-		return fmt.Errorf("place_buy_order as MAA: %w", err)
+		return fmt.Errorf("%s as MAA: %w", action, err)
 	}
 	fmt.Printf("tx: %s\nhttps://trufscan.io/tx/%s\nwaiting for inclusion...\n", tx, tx)
 	h, err := kwilTypes.NewHashFromString(tx)
@@ -380,6 +511,6 @@ func buy(maaHex, bookStr, side, priceStr, amountStr string) error {
 	if res.Result.Code != uint32(kwilTypes.CodeOk) {
 		return fmt.Errorf("tx FAILED (code %d): %s", res.Result.Code, res.Result.Log)
 	}
-	fmt.Println("\nOK, order placed.")
+	fmt.Println("\nOK, committed.")
 	return nil
 }
