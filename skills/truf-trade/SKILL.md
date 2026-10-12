@@ -100,7 +100,7 @@ buy fills, list the shares with `sell <maa> <book> <yes|no> 99 <shares>`. A
 listed ask settles exactly like a holding, at 98c if it wins, and if anyone buys
 it first you get 99c. That holds for shares you plan to carry to settlement and
 for shares you plan to sell later. Once a print has ruled a share out, cancel
-the 99c ask and re-list at 5c or less. AGENTS.md rule 3 has the reasoning.
+the 99c ask and re-list at 3c, where a longshot buyer might take it. AGENTS.md rule 3 has the reasoning.
 
 **Watching.** `scripts/watch-portfolio.py <maa>` is the watcher. Start it once,
 detached with `setsid nohup ... &`, after placing orders. It appends `FILLED`,

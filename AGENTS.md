@@ -87,7 +87,8 @@ the price you want.
 
 One exception. Once the deciding print has ruled a share out, it is a certain
 zero at settlement and a 99c ask on it will never sell. Cancel it and re-list at
-5c or less, priced so someone might actually buy it.
+3c, priced so a longshot buyer might actually take it. Left at 99c it is a
+certain total loss.
 
 ## Evidence
 
