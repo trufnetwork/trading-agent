@@ -50,7 +50,7 @@ The runbook links into these. Read the one that matches the task, not all four.
 trade. Most expensive mistakes in this domain are reading comprehension
 failures, not execution failures.
 
-## The two rules that matter most
+## The three rules that matter most
 
 **1. Reads are plain SQL. Writes are SDK only.** Kwil maps each namespace to a
 Postgres schema of the same name, so the market protocol lives in schema `main`.
@@ -62,6 +62,32 @@ this schema are honest but incomplete. `collateral_change` is a magnitude with
 its sign held in another column, `price` encodes side as well as level, and a
 `query_id` is one order book rather than one market. Check the defining
 migration before you aggregate anything.
+
+**3. Never hold a position off the books. Rest it as a 99c ask.** This is the
+default for every share you own, whether you mean to carry it to settlement or
+sell it later for a profit. Do it right after every buy.
+
+    ./agent/agent sell $TN_MAA <book> <yes|no> 99 <shares>
+
+Settlement pays a listed ask exactly like a holding. `process_settlement` pays
+98c (one dollar less the 2c protocol fee) on every winning position with
+`price >= 0`, which covers holdings at price 0 and asks at any positive price
+alike ("Winning sell orders (price>0, winning outcome): 98 (redeemed, not
+sold)", 033-order-book-settlement.sql).
+
+|  | ask never fills | ask fills at 99c |
+|---|---|---|
+| share wins | 98c, same as holding | 99c, one cent better |
+| share loses | 0c, same as holding | 99c instead of nothing |
+
+So the ask is never worse and sometimes better. 99c is the highest legal ask,
+an ask never fills below its own price, and placing or cancelling an order
+costs nothing. To sell later at a lower price, cancel the 99c ask and list at
+the price you want.
+
+One exception. Once the deciding print has ruled a share out, it is a certain
+zero at settlement and a 99c ask on it will never sell. Cancel it and re-list at
+5c or less, priced so someone might actually buy it.
 
 ## Evidence
 

@@ -352,6 +352,15 @@ scripts/portfolio.py <maa>
 The helper also has `sell`, `split`, and `cancel`, one for each action the
 agent rule allows. `skills/truf-trade/SKILL.md` describes each.
 
+**Rest what you bought at 99c.** Never leave shares off the books:
+
+```bash
+./agent/agent sell "$TN_MAA" <order-book> <yes|no> 99 <shares>
+```
+
+A listed ask settles exactly like a holding, so it costs nothing and can only
+add. See AGENTS.md rule 3.
+
 **Then start the watcher, detached, and stop polling.**
 
 ```bash
