@@ -24,6 +24,7 @@ real run.
 | A market settled with two winners or none | [A ladder settled wrong](#a-ladder-settled-wrong) |
 | A market settled with no recent data | [Settlement with nothing in the window](#settlement-with-nothing-in-the-window) |
 | A stream's prints changed shape | [A publisher changed its schedule](#a-publisher-changed-its-schedule) |
+| Trading scripts go quiet, or the node's height stops moving | [Node stalled](#node-stalled) |
 
 ---
 
@@ -354,3 +355,58 @@ priced under the old schedule.
 **What to do.** `scripts/edge.py` detects both and compares the changepoint
 against when your market opened. The value series is continuous through either,
 so pricing keeps the full history.
+
+## Node stalled
+
+**What you see.** Your trading scripts stop acting, often without an error. The
+node's height stops moving while a public node's keeps climbing. The kwild log
+repeats `No connected peers and no known addresses to dial`.
+
+**What it means.** The process is running but follows nothing. Anything that
+only restarts an exited kwild sees no problem. Meanwhile **every order you left
+resting stays live on chain**, at prices set before the stall.
+
+**Confirm it.** Run `scripts/node-doctor.sh`. It compares your height with an
+upstream node, checks whether yours is moving, and reads the dial errors in the
+log. It ends on one `VERDICT` line.
+
+**What to do.**
+
+1. **Contain first.** Your node's view of your orders is as stale as the node.
+   Read them through the public gateway:
+   `TN_RPC=https://gateway.mainnet.truf.network ./agent/agent positions "$TN_MAA"`.
+   Check each one against anything that happened since the stall began, such
+   as a print elsewhere or the release a market is about.
+2. **Fix the node.** Run `scripts/node-doctor.sh --fix`. It applies the fix for
+   the verdict below. If you installed the timer, it may already have done so.
+3. **Confirm the recovery.** Wait for `VERDICT OK`, then check that your scripts
+   resumed and that your orders on the gateway match what you meant to quote.
+
+| Verdict | Cause | `--fix` does |
+|---------|-------|--------------|
+| `PEER_ID_MISMATCH` | The bootnodes rotated their keys. The log says `peer id mismatch: expected X, but remote key matches Y` | Reads the published bootnodes from trufnetwork/node `docs/node-operator-guide.md`. Swaps in a host's entry only if its key derives to exactly the peer ID that host presented. Backs up `config.toml`, then restarts kwild |
+| `NO_PEERS` | The remote side never finished the handshake, as in [Sync never starts](#sync-never-starts) | Restarts kwild, at most once per 10 minutes |
+| `APPHASH` | Your binary is behind a consensus change. kwild halts with `AppHash mismatch, halting the node`, so this shows even when kwild is no longer running | Nothing. Reports your version against the latest release. Install the release by hand |
+| `NOT_RUNNING` | kwild exited for another reason | Nothing. Start it as Phase 4 does, or let your supervisor do it |
+| `STUCK` | Anything else | Nothing. Read the end of the kwild log |
+
+The doctor reads the log only from the moment the running kwild started. An
+error from an earlier run in the same file does not count.
+
+**How it restarts kwild.** It sends SIGTERM to the exact PID. If a supervisor
+starts kwild again within a minute, it leaves it to that. Otherwise it starts
+kwild as Phase 4 does, with a fresh log. Run from the systemd timer, it starts
+kwild in a scope of its own, because systemd kills what a finished unit leaves
+behind. It checks that the new kwild is up before it reports success.
+
+**Never kill kwild with a bare `pgrep -f 'kwild start'`.** That pattern also
+matches any shell whose command line contains it, and the kill lands on the
+shell. Match the process by its executable, as the script does. The script also
+matches on `--root`, so another node on the same machine is never touched. Set
+`TN_NODE_ROOT` if your node's root is not `$TN_HOME/tn-node`.
+
+**Why a rotation strands a node.** The old connections keep working after the
+bootnodes change keys, so nothing looks wrong. The first restart then has no
+peer it can dial. This was observed after a reboot, two weeks after the new
+keys were published.
+

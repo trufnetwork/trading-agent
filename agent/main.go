@@ -93,6 +93,7 @@ func main() {
 		fmt.Println("       sell   <maa> <order-book> <yes|no> <price-cents> <shares>")
 		fmt.Println("       split  <maa> <order-book> <yes-price-cents> <pairs>")
 		fmt.Println("       cancel <maa> <order-book> <yes|no> <buy|sell> <price-cents>")
+		fmt.Println("       positions <maa>")
 		os.Exit(2)
 	}
 	var err error
@@ -136,6 +137,12 @@ func main() {
 			err = fmt.Errorf("derive needs the owner's 0x address")
 		} else {
 			err = derive(os.Args[2])
+		}
+	case "positions":
+		if len(os.Args) < 3 {
+			err = fmt.Errorf("positions <wallet-address>")
+		} else {
+			err = positions(os.Args[2])
 		}
 	default:
 		err = fmt.Errorf("unknown command %q", os.Args[1])
@@ -456,6 +463,37 @@ func cancel(maaHex, bookStr, side, kind, priceStr string) error {
 	return execute(maaHex, "cancel_order", []any{book, outcome, price},
 		fmt.Sprintf("CANCEL %s %s @ %dc on order book %d", strings.ToUpper(kind), strings.ToUpper(side), abs(price), book),
 		"locked funds or shares return to the agent wallet")
+}
+
+// positions reads get_positions_by_wallet: every holding, ask and bid the
+// wallet has, one JSON row per line. Read-only. Point TN_RPC at the public
+// gateway to read it while the local node is down or behind.
+func positions(wallet string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	c, _, err := client(ctx)
+	if err != nil {
+		return err
+	}
+	res, err := c.GetKwilClient().Call(ctx, "main", "get_positions_by_wallet", []any{strings.ToLower(strings.TrimSpace(wallet))})
+	if err != nil {
+		return fmt.Errorf("get_positions_by_wallet: %w", err)
+	}
+	if res.Error != nil {
+		return fmt.Errorf("get_positions_by_wallet: %s", *res.Error)
+	}
+	if res.QueryResult == nil {
+		return nil
+	}
+	for _, v := range res.QueryResult.Values {
+		row := map[string]any{}
+		for i, col := range res.QueryResult.ColumnNames {
+			row[col] = v[i]
+		}
+		b, _ := json.Marshal(row)
+		fmt.Println(string(b))
+	}
+	return nil
 }
 
 func abs(x int) int {
