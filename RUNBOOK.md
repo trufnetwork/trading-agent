@@ -431,9 +431,44 @@ net       +$5.40
 | `scripts/tnconn.py` | shared connection settings for the Python scripts |
 | `scripts/edge.py` | which order book to trade, at what price, and the settlement exposure |
 | `scripts/portfolio.py` | holdings marked at the best other-party bid |
+| `scripts/node-doctor.sh` | whether the node is following the chain, why not, and `--fix` for the safe cases |
 
 Detection lives only in `status.sh`. Everything else renders it, so the views
 cannot disagree with each other.
+
+## Keep the node healthy while trading
+
+A trading script should refuse to act on a stale node, but **the orders it left
+resting stay live**. A node that stalls while still running leaves every quote
+unmanaged, and a check that only restarts an exited kwild will not notice.
+
+**Install the doctor once.** It runs every five minutes, records each change of
+verdict in `node-doctor.log`, and alerts while the node needs attention.
+
+```bash
+cd "$TN_HOME"
+mkdir -p ~/.config/systemd/user
+sed "s#@ROOT@#$TN_HOME#" systemd/tn-node-doctor.service > ~/.config/systemd/user/tn-node-doctor.service
+cp systemd/tn-node-doctor.timer ~/.config/systemd/user/
+systemctl --user daemon-reload && systemctl --user enable --now tn-node-doctor.timer
+```
+
+Without systemd, a cron line does the same job:
+`*/5 * * * * $TN_HOME/scripts/node-doctor.sh --fix --quiet`. Alerts use
+`notify-send` when present. On a server, set `NODE_ALERT_CMD` to any command
+that takes the message as its argument.
+
+**What it will and will not do.** It fixes rotated bootnode keys and peerless
+stalls, and nothing else. It never installs a binary and never touches an
+order.
+
+**Before any trading decision or status report:**
+
+1. Run `scripts/node-doctor.sh`. Act only on `OK`. On `CATCHING_UP`, report the
+   lag and wait.
+2. On anything else, follow [Node stalled](FIELD-MANUAL.md#node-stalled).
+   Contain first, by reading your live orders through the public gateway.
+3. After a recovery, confirm your scripts resumed, then read the orders again.
 
 ## When something does not work
 
