@@ -373,10 +373,10 @@ log. It ends on one `VERDICT` line.
 **What to do.**
 
 1. **Contain first.** Your node's view of your orders is as stale as the node.
-   Read them through the public gateway (`https://gateway.mainnet.truf.network`,
-   action `get_positions_by_wallet`). Check each one against anything that
-   happened since the stall began, such as a print elsewhere or the release a
-   market is about.
+   Read them through the public gateway:
+   `TN_RPC=https://gateway.mainnet.truf.network ./agent/agent positions "$TN_MAA"`.
+   Check each one against anything that happened since the stall began, such
+   as a print elsewhere or the release a market is about.
 2. **Fix the node.** Run `scripts/node-doctor.sh --fix`. It applies the fix for
    the verdict below. If you installed the timer, it may already have done so.
 3. **Confirm the recovery.** Wait for `VERDICT OK`, then check that your scripts
@@ -386,16 +386,24 @@ log. It ends on one `VERDICT` line.
 |---------|-------|--------------|
 | `PEER_ID_MISMATCH` | The bootnodes rotated their keys. The log says `peer id mismatch: expected X, but remote key matches Y` | Reads the published bootnodes from trufnetwork/node `docs/node-operator-guide.md`. Swaps in a host's entry only if its key derives to exactly the peer ID that host presented. Backs up `config.toml`, then restarts kwild |
 | `NO_PEERS` | The remote side never finished the handshake, as in [Sync never starts](#sync-never-starts) | Restarts kwild, at most once per 10 minutes |
-| `APPHASH` | Your binary is behind a consensus change | Nothing. Reports your version against the latest release. Install the release by hand |
+| `APPHASH` | Your binary is behind a consensus change. kwild halts with `AppHash mismatch, halting the node`, so this shows even when kwild is no longer running | Nothing. Reports your version against the latest release. Install the release by hand |
+| `NOT_RUNNING` | kwild exited for another reason | Nothing. Start it as Phase 4 does, or let your supervisor do it |
 | `STUCK` | Anything else | Nothing. Read the end of the kwild log |
+
+The doctor reads the log only from the moment the running kwild started. An
+error from an earlier run in the same file does not count.
 
 **How it restarts kwild.** It sends SIGTERM to the exact PID. If a supervisor
 starts kwild again within a minute, it leaves it to that. Otherwise it starts
-kwild as Phase 4 does, with a fresh log.
+kwild as Phase 4 does, with a fresh log. Run from the systemd timer, it starts
+kwild in a scope of its own, because systemd kills what a finished unit leaves
+behind. It checks that the new kwild is up before it reports success.
 
 **Never kill kwild with a bare `pgrep -f 'kwild start'`.** That pattern also
 matches any shell whose command line contains it, and the kill lands on the
-shell. Match the process by its executable, as the script does.
+shell. Match the process by its executable, as the script does. The script also
+matches on `--root`, so another node on the same machine is never touched. Set
+`TN_NODE_ROOT` if your node's root is not `$TN_HOME/tn-node`.
 
 **Why a rotation strands a node.** The old connections keep working after the
 bootnodes change keys, so nothing looks wrong. The first restart then has no

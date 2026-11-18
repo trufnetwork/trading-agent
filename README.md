@@ -256,7 +256,7 @@ the measurements, the reasoning, and the mistakes that produced each rule.
 | [scripts/describe.py](scripts/describe.py) | What is this order book, in words, with its trufscan link |
 | [scripts/portfolio.py](scripts/portfolio.py) | Cash, positions, cost basis, mark, settlement outcomes |
 | [scripts/watch-portfolio.py](scripts/watch-portfolio.py) | Detached watcher: logs fills, settlements and payouts, exits when done |
-| [agent/](agent/) | Go client: keygen, create-rule, derive, decode, buy |
+| [agent/](agent/) | Go client: keygen, create-rule, derive, decode, buy, positions |
 | [sql/indexer-schema.sql](sql/indexer-schema.sql) | Indexer tables, each naming its open question |
 | [scripts/markets.py](scripts/markets.py) | Live market report straight from Postgres |
 | [scripts/refresh-streams.py](scripts/refresh-streams.py) | Stream names from trufscan (no on-chain names exist) |

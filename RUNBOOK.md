@@ -453,8 +453,10 @@ cp systemd/tn-node-doctor.timer ~/.config/systemd/user/
 systemctl --user daemon-reload && systemctl --user enable --now tn-node-doctor.timer
 ```
 
-Without systemd, a cron line does the same job:
-`*/5 * * * * $TN_HOME/scripts/node-doctor.sh --fix --quiet`. Alerts use
+Without systemd, a cron line does the same job. Cron does not know `$TN_HOME`,
+so write the path out. Print the line with
+`echo "*/5 * * * * $TN_HOME/scripts/node-doctor.sh --fix --quiet"` and add it
+with `crontab -e`. Alerts use
 `notify-send` when present. On a server, set `NODE_ALERT_CMD` to any command
 that takes the message as its argument.
 
@@ -467,7 +469,8 @@ order.
 1. Run `scripts/node-doctor.sh`. Act only on `OK`. On `CATCHING_UP`, report the
    lag and wait.
 2. On anything else, follow [Node stalled](FIELD-MANUAL.md#node-stalled).
-   Contain first, by reading your live orders through the public gateway.
+   Contain first, by reading your live orders through the public gateway
+   with `./agent/agent positions`.
 3. After a recovery, confirm your scripts resumed, then read the orders again.
 
 ## When something does not work
