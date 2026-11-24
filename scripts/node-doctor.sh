@@ -28,6 +28,7 @@
 #   TN_NODE_ROOT    this node's --root (default $TN_HOME/tn-node). Only the kwild
 #                   started with this root is checked, and ever restarted
 #   TN_UPSTREAM     a node that is known to be current, for the chain tip
+#                   (default: the public gateway)
 #   TN_GATEWAY      fallback for the tip when TN_UPSTREAM does not answer
 #   NODE_MAX_LAG    blocks behind that still count as OK (default 20)
 #   NODE_ALERT_CMD  command run with one message argument on each alert, for
@@ -39,8 +40,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck disable=SC1091
 [ -f "$ROOT/.tn-env" ] && . "$ROOT/.tn-env"
 RPC=${TN_RPC:-http://127.0.0.1:${TN_RPC_PORT:-8484}}
-UPSTREAM=${TN_UPSTREAM:-http://node-1.mainnet.truf.network:8484}
 GATEWAY=${TN_GATEWAY:-https://gateway.mainnet.truf.network}
+UPSTREAM=${TN_UPSTREAM:-$GATEWAY}
 HOME_DIR=${TN_HOME:-$ROOT}
 STATE="$HOME_DIR/.node-doctor.state"
 OUT="$HOME_DIR/node-doctor.log"
@@ -94,13 +95,16 @@ CONF="$NODE_ROOT/config.toml"
 # as the cause of this stall.
 runlog(){ tail -n 20000 "$LOGF" 2>/dev/null \
   | awk -v s="$START" '/^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] /{ if (($1" "$2) >= s) print }' | tail -n 2000; }
-# kwild exits on an AppHash mismatch, so the halt is in the end of the log
-# whether it is now down or was started again by a supervisor.
-halted(){ tail -n 400 "$LOGF" 2>/dev/null | grep -qiE 'apphash mismatch|wrong app ?hash|consensus failure'; }
+# kwild exits on an AppHash mismatch. While it is down the halt is in the end of
+# the log. Once it runs again only this run's lines count, so a node restarted
+# on a fixed binary is not reported by the halt of the run before.
+halted(){ { if [ -n "$PID" ]; then runlog; else tail -n 400 "$LOGF" 2>/dev/null; fi; } \
+  | grep -qiE 'apphash mismatch|wrong app ?hash|consensus failure'; }
 
 verdict(){
   if [ -z "$PID" ]; then V=NOT_RUNNING; halted && V=APPHASH; return; fi
-  L=$(height "$RPC"); U=$(height "$UPSTREAM"); [ -n "$U" ] || U=$(height "$GATEWAY")
+  L=$(height "$RPC"); U=$(height "$UPSTREAM")
+  [ -n "$U" ] || [ "$UPSTREAM" = "$GATEWAY" ] || U=$(height "$GATEWAY")
   say "NODE_PID=$PID"; say "NODE_LOCAL=${L:-?}"; say "NODE_TIP=${U:-?}"
   if [ -z "$L" ]; then
     up=$(ps -o etimes= -p "$PID" | tr -d ' ')
@@ -227,9 +231,14 @@ case $V in
     if [ $(( $(date +%s) - ${rs:-0} )) -ge 600 ]; then restart_kwild
     else note "NO_PEERS: restarted under 10 min ago, waiting"; fi ;;
   APPHASH)
-    have=$("$KWILD" version 2>/dev/null | grep -i version | awk '{print $NF}')
-    want=$(curl -s -m 15 https://api.github.com/repos/trufnetwork/node/releases/latest | grep -oE '"tag_name": *"[^"]+"' | cut -d'"' -f4)
-    note "APPHASH: binary ${have:-?}, latest release ${want:-?}. Install the release (FIELD-MANUAL.md 'Node stalled'). Not automatic." ;;
+    # A TN build reports the kwil-db version, not the TN release, so the two
+    # are shown side by side with dates instead of being compared.
+    have=$("$KWILD" version --output json 2>/dev/null | grep -oE '"version": *"[^"]+"' | cut -d'"' -f4)
+    built=$(date -r "$KWILD" '+%F' 2>/dev/null)
+    rel=$(curl -s -m 15 https://api.github.com/repos/trufnetwork/node/releases/latest)
+    want=$(printf '%s' "$rel" | grep -oE '"tag_name": *"[^"]+"' | cut -d'"' -f4)
+    wdate=$(printf '%s' "$rel" | grep -oE '"published_at": *"[^"]+"' | cut -d'"' -f4 | cut -c1-10)
+    note "APPHASH: binary ${KWILD:-kwild (not on PATH)} reports kwil-db ${have:-?}, file dated ${built:-?}. Latest TN release ${want:-?}, published ${wdate:-?}. If the binary predates that release, install it (FIELD-MANUAL.md 'Node stalled'). Not automatic." ;;
   *) note "$V: no automatic fix. Read the end of $LOGF." ;;
 esac
 exit 1

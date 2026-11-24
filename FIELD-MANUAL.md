@@ -386,7 +386,7 @@ log. It ends on one `VERDICT` line.
 |---------|-------|--------------|
 | `PEER_ID_MISMATCH` | The bootnodes rotated their keys. The log says `peer id mismatch: expected X, but remote key matches Y` | Reads the published bootnodes from trufnetwork/node `docs/node-operator-guide.md`. Swaps in a host's entry only if its key derives to exactly the peer ID that host presented. Backs up `config.toml`, then restarts kwild |
 | `NO_PEERS` | The remote side never finished the handshake, as in [Sync never starts](#sync-never-starts) | Restarts kwild, at most once per 10 minutes |
-| `APPHASH` | Your binary is behind a consensus change. kwild halts with `AppHash mismatch, halting the node`, so this shows even when kwild is no longer running | Nothing. Reports your version against the latest release. Install the release by hand |
+| `APPHASH` | Your binary is behind a consensus change. kwild halts with `AppHash mismatch, halting the node`, so this shows even when kwild is no longer running | Nothing. Shows your binary's version and file date beside the latest release and its date. kwild reports the kwil-db version, not the TN release, so judge by the dates. Install the release by hand |
 | `NOT_RUNNING` | kwild exited for another reason | Nothing. Start it as Phase 4 does, or let your supervisor do it |
 | `STUCK` | Anything else | Nothing. Read the end of the kwild log |
 
