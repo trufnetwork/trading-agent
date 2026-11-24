@@ -1,0 +1,9 @@
+[Unit]
+Description=TN node doctor: alert when the node stops following the chain, apply the safe fix
+
+[Service]
+Type=oneshot
+# @ROOT@ is replaced with this repository's path at install (RUNBOOK.md).
+ExecStart=@ROOT@/scripts/node-doctor.sh --fix --quiet
+# Exit 1 means "needs attention", already logged and alerted. Not a unit failure.
+SuccessExitStatus=1 2
